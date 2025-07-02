@@ -1,4 +1,4 @@
-﻿#include <SFML/Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 
 #include <cstdlib>
@@ -36,13 +36,14 @@ string direction = "w";
 int coinscreated = 0;
 int y_hero = 1;
 int x_hero = 1;
+float talescale;
 int difficulty_index = -2;
 bool startbutton_clicked = false;
 Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture ;
 Sprite hero;
 Text coinsscore_text;
 RenderWindow window;
-int plussize, talesize, talescale, coinsscore, save_y;
+int plussize, talesize, coinsscore, save_y;
 bool animationbool;
 
    
