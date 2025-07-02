@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <windows.h>
+#include <ctime>
 #include <iostream>
 #include <string>
 
@@ -40,10 +41,10 @@ float talescale;
 int difficulty_index = -2;
 bool startbutton_clicked = false;
 Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture ;
-Sprite hero;
+Sprite hero,ghost;
 Text coinsscore_text;
 RenderWindow window;
-int plussize, talesize, coinsscore, save_y;
+int plussize, talesize, coinsscore, save_y, timespassed;
 bool animationbool;
 
    
@@ -231,6 +232,7 @@ string setupmap_new(int difficulty) {
     return"lol";
 }
 
+//texture AND position after button press
 int hero_set_texture() {
     if (direction == "a") {
         if (x_hero - 1 >= 0 && (gamemap[y_hero][x_hero - 1] == "tale" or gamemap[y_hero][x_hero - 1] == "coin"))
@@ -361,8 +363,11 @@ int drawmap() {
     else {
         coinsscore_text.setString("score: " + to_string(coinsscore));
     }
+
     window.draw(coinsscore_text); //cout << "coinscore" << coinsscore << "coinscreated" << coinscreated << endl;
     window.draw(hero);
+    window.draw(ghost);
+
 
 
     return 1;
@@ -392,7 +397,7 @@ int main() {
 
     // Call the create_gamemap function
     setupmap_new(difficulty_index);
-
+    time_t start_timer = time(0);
 
     Font font;
     if (!font.loadFromFile("opensans.ttf"))
@@ -461,6 +466,7 @@ int main() {
 
     if (!ghost_texture.loadFromFile("images/ghost2.png"))
         return EXIT_FAILURE;
+
 
 
     animationbool = true;
@@ -560,6 +566,9 @@ int main() {
         float sum_sleep = 0;
         float fpos = 1 / fps;
         float secsleep = 0.005;
+        int ghost_time = 3;
+        time_t end_timer = time(0);
+        int time_passed = end_timer-start_timer;
 
         if (direction != "o") {
             sf::sleep(sf::seconds(fpos));
@@ -567,6 +576,13 @@ int main() {
 
         direction = checkdirection();
         
+        
+        cout << time_passed << endl;
+        if (time_passed > ghost_time) {
+            cout << "3secs paassed" << endl;
+        }
+
+
         bool waiting = true;
         while (waiting) {
             if (direction == "o") {
