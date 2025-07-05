@@ -37,21 +37,22 @@ string direction = "w";
 int coinscreated = 0;
 int y_hero = 1;
 int x_hero = 1;
+int ghost_time = 3;
+int time_passed = 0;
 float talescale;
 int difficulty_index = -2;
 bool startbutton_clicked = false;
 Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture ;
 Sprite hero,ghost;
-Text coinsscore_text;
+Text coinsscore_text,countdown_text;
 RenderWindow window;
 int plussize, talesize, coinsscore, save_y, timespassed;
 bool animationbool;
-
+time_t start_timer;
    
 
 
 string create_gamemap(int difficulty) {
-
 
     srand(time(0)); // <-- делает rand() случайным каждый раз
 
@@ -181,7 +182,17 @@ string countcoins() {
 
 }
 
+string print_countdown(int screenpxfr, Font font) {
+    countdown_text.setString(to_string(time_passed));
+    countdown_text.setFont(font);
+    countdown_text.setCharacterSize(100);
 
+    countdown_text.setFillColor(Color(rand() % 56+200, rand() % 206+50, rand() % 206+50));
+    countdown_text.setPosition(float(screenpxfr/2)-50, 150.f);
+    window.draw(countdown_text);
+
+    return "1";
+}
 
 
 
@@ -351,11 +362,12 @@ int drawmap() {
     }
 
     //bgColor = Color(rand() % 256, rand() % 256, rand() % 256);
-    //checking if all coins are picked up
+    //checking if all coins are picked up, if so then create a new map and reset variables
     if (coinsscore >= coinscreated) {
         coinsscore_text.setString("all got");
         difficulty_index++;
         setupmap_new(difficulty_index);
+        start_timer = time(0);  cout << "new start timer" << endl;
 
         coinsscore = 0;
     }
@@ -397,7 +409,7 @@ int main() {
 
     // Call the create_gamemap function
     setupmap_new(difficulty_index);
-    time_t start_timer = time(0);
+    start_timer = time(0);
 
     Font font;
     if (!font.loadFromFile("opensans.ttf"))
@@ -529,7 +541,7 @@ int main() {
         save_y = y_hero;
         
         if (direction != "o") {
-            cout << "CHCKING DIRRECTION<<" << endl;
+            //cout << "CHCKING dirRECTION<<" << endl;
             string direction = checkdirection();
         }
         // переменная для героя, всегда вне условий
@@ -549,10 +561,14 @@ int main() {
         }
         //gamemap[y_hero][x_hero] = "1";
         
+        
+
         //draws the entire map and all the othуr sprites
         drawmap();
         
-       
+        if (time_passed <= ghost_time) {
+            print_countdown(screenpxfr, font);
+        }
         /*
         hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
         hero.setScale(heroscale, heroscale);*/
@@ -566,9 +582,9 @@ int main() {
         float sum_sleep = 0;
         float fpos = 1 / fps;
         float secsleep = 0.005;
-        int ghost_time = 3;
+        
         time_t end_timer = time(0);
-        int time_passed = end_timer-start_timer;
+        time_passed = end_timer-start_timer;
 
         if (direction != "o") {
             sf::sleep(sf::seconds(fpos));
@@ -577,10 +593,8 @@ int main() {
         direction = checkdirection();
         
         
-        cout << time_passed << endl;
-        if (time_passed > ghost_time) {
-            cout << "3secs paassed" << endl;
-        }
+        cout << time_passed<<"jgfjgjghfghf" << endl;
+        
 
 
         bool waiting = true;
