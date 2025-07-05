@@ -529,7 +529,7 @@ int main() {
         save_y = y_hero;
         
         if (direction != "o") {
-            cout << "CHCKING NIGGERECTION<<" << endl;
+            cout << "CHCKING DIRRECTION<<" << endl;
             string direction = checkdirection();
         }
         // переменная для героя, всегда вне условий
