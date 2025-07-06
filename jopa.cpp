@@ -169,33 +169,56 @@ string fill_map() {
 
 }
 
-do_ghost() {
+int do_ghost() {
+
+    //cout << "doin ghost" << endl;
+
     if (ghost_allowed) {
-             //create list with 4 elements, each with a list: in each by-list is going to be 3 elements: y,x,distance
-             //sort by distance for (list[1-4][2])
-             // the least distance is the move for us, so we move to y[best][0];x[best][1]
+            //create list with 4 elements, each with a list: in each by-list is going to be 3 elements: y,x,distance
+            //sort by distance for (list[1-4][2])
+            // the least distance is the move for us, so we move to y[best][0];x[best][1]
         
-        //                         direction
-        //1.y  x+     distance     right
-        //2.y+ x      distance     down
-        //3.y  x-     distance     left
-        //4.y- x      distance     up
-        int after_move[4][1]//after_move(coords and distance)
-        for (int i = 0;i++;i == 3) {
+        
+        float after_move[4][3]; //after_move(coords and distance)
+        for (int i = 0;i < 4;i++) {
             after_move[i][0] = y_ghost;
             after_move[i][1] = x_ghost;
         }
-            //now, that we've filled the blank lists, we add the differences
-        after_move[0][0] = y_ghost;
-        after_move[1][0] = y_ghost;
-        after_move[2][0] = y_ghost;
-        after_move[3][0] = y_ghost;
+            //now, that we've filled the blank lists, we add the differences:   
+        //                         direction
+        //0.y  x+     distance     right
+        //1.y+ x      distance     down
+        //2.y  x-     distance     left
+        //3.y- x      distance     up
+        after_move[0][1]+=1;
+        after_move[1][0]+=1;
+        after_move[2][1]-=1;
+        after_move[3][0]-=1;
 
-        for (int i = 0;i++;i == 3) {
-            after_move
+       
+        for (int i = 0;i < 4;i++) {
+            float ysq = pow( (y_hero - after_move[i][0]) , 2);//after_move[i][0] would be ghost's y coordinate after the move, "i" is the direction
+            float xsq = pow( (x_hero - after_move[i][1]) , 2);//after_move[i][1] would be ghost's x coordinate after the move
+            float resultsq = sqrt(ysq+xsq);
+            //cout << "result number "<<i<< ": " << resultsq << endl;
+            
+            after_move[i][2]= resultsq;
+            //cout <<"aftermove"<< after_move[i][2] << endl;
         }
+        int leastnum;
+        for (int i = 0; i < 4;i++) {
+            float least=after_move[i][2];
+            leastnum = i;
+            if (least > after_move[i][2]){
+                least = after_move[i][2];
+                leastnum = i;
+            }
+        }
+        y_ghost = after_move[leastnum][0];
+        x_ghost = after_move[leastnum][1];
 
     }
+    return 1;
 }
 
 string countcoins() {
@@ -583,6 +606,10 @@ int main() {
         // устанавливаем позицию и масштаб — ОБЩИЕ для всех направлений
         hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
         hero.setScale(heroscale, heroscale);
+        
+        ghost.setTexture(ghost_texture);
+        ghost.setPosition(plussize + x_ghost * talescale * 4, plussize + y_ghost * talescale * 4);
+        ghost.setScale(heroscale*1.5, heroscale*1.5);
 
 
         for (int i = 0; i < amountoftalesonscreen; ++i) {
@@ -597,20 +624,21 @@ int main() {
         //draws the entire map and all the othуr sprites
         drawmap();
 
-        draw_ghost();
+        do_ghost();
         
         if (time_passed <= ghost_time) {
             print_countdown(screenpxfr, font);
         }
         else {
             ghost_allowed = true;
+            window.draw(ghost);
         }
         /*
         hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
         hero.setScale(heroscale, heroscale);*/
         
-
-
+        
+        
 
 
         window.display();
