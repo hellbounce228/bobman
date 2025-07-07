@@ -43,6 +43,7 @@ int ghost_time = 3;
 int time_passed = 0;
 float talescale;
 int difficulty_index = -2;
+bool game_over = false;
 bool startbutton_clicked = false;
 bool ghost_allowed = false;
 Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture ;
@@ -206,18 +207,20 @@ int do_ghost() {
             //cout <<"aftermove"<< after_move[i][2] << endl;
         }
         int leastnum;
+        float least=100000000000;
         for (int i = 0; i < 4;i++) {
-            float least=after_move[i][2];
-            leastnum = i;
-            if (least > after_move[i][2]){
+            int after_move_y = after_move[i][0];
+            int after_move_x = after_move[i][1];
+            if (least > after_move[i][2] and gamemap[after_move_y][after_move_x]=="tale" or gamemap[after_move_y][after_move_x] == "coin") {
                 least = after_move[i][2];
                 leastnum = i;
             }
         }
         y_ghost = after_move[leastnum][0];
         x_ghost = after_move[leastnum][1];
-
+        window.draw(ghost);
     }
+    
     return 1;
 }
 
@@ -267,6 +270,8 @@ string setupmap_harder(int difficulty) {
     gamemap[1][1] = "1";
     y_hero = 1;
     x_hero = 1;
+    y_ghost = 1;
+    x_ghost = 1;
 
     return"lol";
 }
@@ -423,6 +428,7 @@ int drawmap() {
         setupmap_new(difficulty_index);
         start_timer = time(0);  cout << "new start timer" << endl;
         ghost_allowed = false;
+        
         coinsscore = 0;
     }
     //if not all picked up then display the score
@@ -432,7 +438,6 @@ int drawmap() {
 
     window.draw(coinsscore_text); //cout << "coinscore" << coinsscore << "coinscreated" << coinscreated << endl;
     window.draw(hero);
-    window.draw(ghost);
 
 
 
@@ -528,10 +533,10 @@ int main() {
         return EXIT_FAILURE;
 
     if (!hero_texture_right.loadFromFile("images/hero_white_right.png"))
-        return EXIT_FAILURE;
+    return EXIT_FAILURE;
 
-    if (!ghost_texture.loadFromFile("images/ghost2.png"))
-        return EXIT_FAILURE;
+    if (!ghost_texture.loadFromFile("images/ghost3.png"))
+    return EXIT_FAILURE;
 
 
 
@@ -559,7 +564,7 @@ int main() {
     while (window.isOpen())
     {
         {
-            if (musicintro == true){
+            if (musicintro == true) {
                 if (intromusic.getStatus() == sf::SoundSource::Stopped) {
                     loopmusic.setLoop(true);     // чтобы играла по кругу
                     loopmusic.setVolume(20);     // громкость от 0 до 100
@@ -567,15 +572,15 @@ int main() {
                     musicintro = false;
                 }
             }
-        
-        Event event;
-        while (window.pollEvent(event))
-        
-            if (event.type == Event::Closed)
-                window.close();
+
+            Event event;
+            while (window.pollEvent(event))
+
+                if (event.type == Event::Closed)
+                    window.close();
 
 
-            
+
 
             // клик по спрайту
             if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left)
@@ -593,7 +598,7 @@ int main() {
         window.clear(bgColor);
 
         save_y = y_hero;
-        
+
         if (direction != "o") {
             //cout << "CHCKING dirRECTION<<" << endl;
             string direction = checkdirection();
@@ -606,10 +611,10 @@ int main() {
         // устанавливаем позицию и масштаб — ОБЩИЕ для всех направлений
         hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
         hero.setScale(heroscale, heroscale);
-        
+
         ghost.setTexture(ghost_texture);
         ghost.setPosition(plussize + x_ghost * talescale * 4, plussize + y_ghost * talescale * 4);
-        ghost.setScale(heroscale*1.5, heroscale*1.5);
+        ghost.setScale(heroscale, heroscale);
 
 
         for (int i = 0; i < amountoftalesonscreen; ++i) {
@@ -618,20 +623,25 @@ int main() {
             }
         }
         //gamemap[y_hero][x_hero] = "1";
-        
-        
+
+
 
         //draws the entire map and all the othуr sprites
         drawmap();
 
         do_ghost();
-        
+
+        if (y_ghost == y_hero and x_ghost == x_hero and ghost_allowed==true){
+            game_over = true;
+            window.close();
+        }
+
         if (time_passed <= ghost_time) {
             print_countdown(screenpxfr, font);
         }
         else {
             ghost_allowed = true;
-            window.draw(ghost);
+            
         }
         /*
         hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
@@ -685,19 +695,19 @@ int main() {
     }
 
     return EXIT_SUCCESS;
-}
+    }
 
 
 
 
-/*
-green
-#4cce0f
+    /*
+    green
+    #4cce0f
 
-dark green
-#0f1c08
+    dark green
+    #0f1c08
 
-C:\GLP\jopa
+    C:\GLP\jopa
 
 
 */
