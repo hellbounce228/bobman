@@ -211,7 +211,7 @@ int do_ghost() {
         for (int i = 0; i < 4;i++) {
             int after_move_y = after_move[i][0];
             int after_move_x = after_move[i][1];
-            if (least > after_move[i][2] and gamemap[after_move_y][after_move_x]=="tale" or gamemap[after_move_y][after_move_x] == "coin") {
+            if ((least > after_move[i][2] and gamemap[after_move_y][after_move_x]=="tale") or (least > after_move[i][2] and gamemap[after_move_y][after_move_x] == "coin") ) {
                 least = after_move[i][2];
                 leastnum = i;
             }
@@ -219,6 +219,12 @@ int do_ghost() {
         y_ghost = after_move[leastnum][0];
         x_ghost = after_move[leastnum][1];
         window.draw(ghost);
+
+        //if the ghost is on the same square as the hero is on, hero dies
+        if (y_ghost == y_hero and x_ghost == x_hero) {
+            game_over = true;
+            window.close();
+        }
     }
     
     return 1;
@@ -240,7 +246,7 @@ string countcoins() {
 }
 
 string print_countdown(int screenpxfr, Font font) {
-    countdown_text.setString(to_string(time_passed));
+    countdown_text.setString(to_string( -(time_passed-3) ));
     countdown_text.setFont(font);
     countdown_text.setCharacterSize(100);
 
@@ -298,6 +304,8 @@ string setupmap_new(int difficulty) {
     gamemap[1][1] = "1";
     y_hero = 1;
     x_hero = 1;
+    y_ghost = 1;
+    x_ghost = 1;
 
     return"lol";
 }
@@ -447,7 +455,7 @@ int drawmap() {
 
 int main() {
 
-    float fps = 7;
+    float fps = 5;
     srand(time(0)); // <-- делает rand() случайным каждый раз
 
     const int screensize = 800;
@@ -631,17 +639,15 @@ int main() {
 
         do_ghost();
 
-        if (y_ghost == y_hero and x_ghost == x_hero and ghost_allowed==true){
-            game_over = true;
-            window.close();
-        }
-
-        if (time_passed <= ghost_time) {
+       
+        time_t end_timer = time(0);
+        time_passed = end_timer - start_timer;
+        if (time_passed <= ghost_time-1) {
             print_countdown(screenpxfr, font);
         }
         else {
             ghost_allowed = true;
-            
+           
         }
         /*
         hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
@@ -657,8 +663,7 @@ int main() {
         float fpos = 1 / fps;
         float secsleep = 0.005;
         
-        time_t end_timer = time(0);
-        time_passed = end_timer-start_timer;
+        
 
         if (direction != "o") {
             sf::sleep(sf::seconds(fpos));
