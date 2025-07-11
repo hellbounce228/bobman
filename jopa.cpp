@@ -32,7 +32,8 @@ string checkdirection() {
 
 const int amountoftalesonscreen = 22;
 string gamemap[amountoftalesonscreen][amountoftalesonscreen], gamemap_save[amountoftalesonscreen][amountoftalesonscreen];
-int coinrand = 60;
+int coinrand = 200;
+
 string direction = "w";
 int coinscreated = 0;
 int y_hero = 1;
@@ -41,7 +42,7 @@ int y_ghost = 1;
 int x_ghost = 1;
 int ghost_time = 3;
 int time_passed = 0;
-float talescale;
+float talescale,fps;
 int difficulty_index = -2;
 bool game_over = false;
 bool startbutton_clicked = false;
@@ -53,7 +54,7 @@ RenderWindow window;
 int plussize, talesize, coinsscore, save_y, timespassed;
 bool animationbool;
 time_t start_timer;
-   
+int countcoins();
 
 
 string create_gamemap(int difficulty) {
@@ -127,6 +128,12 @@ string create_gamemap(int difficulty) {
             }
             x_walls_amount--;
         }
+    }
+    //if no coins are created, the map gets recreated without touching other variables like fps, ghost_allowed, difficulty, etc...
+    int countedcoins = countcoins();
+    if (countedcoins < 1) {
+        srand(time(0)+(rand() % 1000)); // the rand%1000 is meant for the random part (described higher up) :)
+        create_gamemap(difficulty);
     }
     return "gameMap created";
 }
@@ -230,7 +237,7 @@ int do_ghost() {
     return 1;
 }
 
-string countcoins() {
+int countcoins() {
     coinscreated = 0;
     for (int i = 0; i < amountoftalesonscreen; ++i) {
         for (int x = 0; x < amountoftalesonscreen; ++x) {
@@ -240,7 +247,7 @@ string countcoins() {
             }
         }
     }
-    return "jopa";
+    return coinscreated;
 
 
 }
@@ -436,12 +443,13 @@ int drawmap() {
         setupmap_new(difficulty_index);
         start_timer = time(0);  cout << "new start timer" << endl;
         ghost_allowed = false;
-        
+        //increasing fps, game getting rapidly harder
+        fps++;
         coinsscore = 0;
     }
     //if not all picked up then display the score
     else {
-        coinsscore_text.setString("score: " + to_string(coinsscore));
+        coinsscore_text.setString("score: " + to_string(coinsscore) + "     fps:"+to_string(int(fps)));
     }
 
     window.draw(coinsscore_text); //cout << "coinscore" << coinsscore << "coinscreated" << coinscreated << endl;
@@ -455,7 +463,7 @@ int drawmap() {
 
 int main() {
 
-    float fps = 5;
+    fps = 5;
     srand(time(0)); // <-- делает rand() случайным каждый раз
 
     const int screensize = 800;
@@ -543,7 +551,7 @@ int main() {
     if (!hero_texture_right.loadFromFile("images/hero_white_right.png"))
     return EXIT_FAILURE;
 
-    if (!ghost_texture.loadFromFile("images/ghost3.png"))
+    if (!ghost_texture.loadFromFile("images/ghost.png"))
     return EXIT_FAILURE;
 
 
