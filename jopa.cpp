@@ -32,7 +32,7 @@ string checkdirection() {
 
 const int amountoftalesonscreen = 22;
 string gamemap[amountoftalesonscreen][amountoftalesonscreen], gamemap_save[amountoftalesonscreen][amountoftalesonscreen];
-int coinrand = 200;
+int coinrand = 60;
 
 string direction = "w";
 int coinscreated = 0;
@@ -62,7 +62,7 @@ string create_gamemap(int difficulty) {
     srand(time(0)); // <-- делает rand() случайным каждый раз
 
     gamemap[amountoftalesonscreen][amountoftalesonscreen];
-    int amountofwalls = (rand() % amountoftalesonscreen / 2 + amountoftalesonscreen * amountoftalesonscreen / 10) + difficulty*10;
+    int amountofwalls = (rand() % amountoftalesonscreen / 2 + amountoftalesonscreen * amountoftalesonscreen / 10) + difficulty*2;
     cout << "amountofwalls" << amountofwalls << endl;
 
     int y_walls_amount = amountofwalls / 2;
@@ -72,6 +72,8 @@ string create_gamemap(int difficulty) {
     int y_wall_coordinate = 1;
     int x_wall_coordinate = 1;
     bool goplus = true;
+    int y_save,x_save;
+
 
     for (int i = 0; i < amountofwalls; i++) {
         int y_wall_length = rand() % (amountoftalesonscreen / 3 - 1) + amountoftalesonscreen / 6;
@@ -92,7 +94,6 @@ string create_gamemap(int difficulty) {
             for (int x = 0; x < y_wall_length; x++) {
                 gamemap[y_wall_coordinate][x_wall_coordinate] = "tale";
                 if (rand() % coinrand == 0) {
-                    //cout << " randmoin" << endl;
                     gamemap[y_wall_coordinate][x_wall_coordinate] = "coin";
                     coinscreated++;
                 }
@@ -103,8 +104,15 @@ string create_gamemap(int difficulty) {
 
         if (x_walls_amount > 0) {
             if (i == 0) {
+                y_save = y_wall_coordinate;
+                x_save = x_wall_coordinate;
                 y_wall_coordinate = 1;
                 x_wall_coordinate = 1;
+            }
+            if (i == 1) {
+                x_wall_coordinate = x_save;
+                x_wall_coordinate = x_save;
+                x_wall_length = 3+rand() % 5;
             }
             if ((x_wall_coordinate + x_wall_length < amountoftalesonscreen) and (x_wall_coordinate - x_wall_length >= 0)) {
                 goplus = rand() % 2 == 1;
@@ -126,6 +134,7 @@ string create_gamemap(int difficulty) {
                 
                 goplus ? x_wall_coordinate++ : x_wall_coordinate--;
             }
+
             x_walls_amount--;
         }
     }
