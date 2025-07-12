@@ -29,17 +29,18 @@ string checkdirection() {
     else return "o";
 }
 
-
+int begin_y = 5+ rand() % 10;
+int begin_x =5+ rand() % 10;
 const int amountoftalesonscreen = 22;
 string gamemap[amountoftalesonscreen][amountoftalesonscreen], gamemap_save[amountoftalesonscreen][amountoftalesonscreen];
 int coinrand = 60;
 
 string direction = "w";
 int coinscreated = 0;
-int y_hero = 1;
-int x_hero = 1;
-int y_ghost = 1;
-int x_ghost = 1;
+int y_hero = begin_y;
+int x_hero = begin_x;
+int y_ghost = begin_y;
+int x_ghost = begin_x;
 int ghost_time = 3;
 int time_passed = 0;
 float talescale,fps;
@@ -69,8 +70,8 @@ string create_gamemap(int difficulty) {
     cout << "y_walls_amount" << y_walls_amount << endl;
     int x_walls_amount = amountofwalls - y_walls_amount;
 
-    int y_wall_coordinate = 1;
-    int x_wall_coordinate = 1;
+    int y_wall_coordinate = begin_y;
+    int x_wall_coordinate = begin_x;
     bool goplus = true;
     int y_save,x_save;
 
@@ -106,8 +107,8 @@ string create_gamemap(int difficulty) {
             if (i == 0) {
                 y_save = y_wall_coordinate;
                 x_save = x_wall_coordinate;
-                y_wall_coordinate = 1;
-                x_wall_coordinate = 1;
+                y_wall_coordinate = begin_y;
+                x_wall_coordinate = begin_x;
             }
             if (i == 1) {
                 x_wall_coordinate = x_save;
@@ -706,7 +707,6 @@ int main() {
             sf::sleep(sf::seconds(secsleep));
             sum_sleep += secsleep;
             if (sum_sleep > fpos or direction!="o") {
-               
                 waiting = false;
                 //cout << "fpsfin" << endl;
             }
