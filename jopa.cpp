@@ -29,8 +29,8 @@ string checkdirection() {
     else return "o";
 }
 
-int begin_y = 5+ rand() % 10;
-int begin_x =5+ rand() % 10;
+int begin_y = rand() % 10;
+int begin_x = rand() % 10;
 const int amountoftalesonscreen = 22;
 string gamemap[amountoftalesonscreen][amountoftalesonscreen], gamemap_save[amountoftalesonscreen][amountoftalesonscreen];
 int coinrand = 60;
@@ -43,19 +43,21 @@ int y_ghost = begin_y;
 int x_ghost = begin_x;
 int ghost_time = 3;
 int time_passed = 0;
-float talescale,fps;
+float talescale, fps;
 int difficulty_index = -2;
 bool game_over = false;
 bool startbutton_clicked = false;
 bool ghost_allowed = false;
-Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture ;
-Sprite hero,ghost;
-Text coinsscore_text,countdown_text;
+Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture;
+Sprite hero, ghost;
+Text coinsscore_text, countdown_text;
 RenderWindow window;
 int plussize, talesize, coinsscore, save_y, timespassed;
 bool animationbool;
 time_t start_timer;
 int countcoins();
+int reset_variables();
+
 
 
 string create_gamemap(int difficulty) {
@@ -63,7 +65,7 @@ string create_gamemap(int difficulty) {
     srand(time(0)); // <-- делает rand() случайным каждый раз
 
     gamemap[amountoftalesonscreen][amountoftalesonscreen];
-    int amountofwalls = (rand() % amountoftalesonscreen / 2 + amountoftalesonscreen * amountoftalesonscreen / 10) + difficulty*2;
+    int amountofwalls = (rand() % amountoftalesonscreen / 2 + amountoftalesonscreen * amountoftalesonscreen / 10) + difficulty * 2;
     cout << "amountofwalls" << amountofwalls << endl;
 
     int y_walls_amount = amountofwalls / 2;
@@ -73,7 +75,7 @@ string create_gamemap(int difficulty) {
     int y_wall_coordinate = begin_y;
     int x_wall_coordinate = begin_x;
     bool goplus = true;
-    int y_save,x_save;
+    int y_save, x_save;
 
 
     for (int i = 0; i < amountofwalls; i++) {
@@ -113,7 +115,7 @@ string create_gamemap(int difficulty) {
             if (i == 1) {
                 x_wall_coordinate = x_save;
                 x_wall_coordinate = x_save;
-                x_wall_length = 3+rand() % 5;
+                x_wall_length = 3 + rand() % 5;
             }
             if ((x_wall_coordinate + x_wall_length < amountoftalesonscreen) and (x_wall_coordinate - x_wall_length >= 0)) {
                 goplus = rand() % 2 == 1;
@@ -132,7 +134,7 @@ string create_gamemap(int difficulty) {
                     gamemap[y_wall_coordinate][x_wall_coordinate] = "coin";
                     coinscreated++;
                 }
-                
+
                 goplus ? x_wall_coordinate++ : x_wall_coordinate--;
             }
 
@@ -142,7 +144,7 @@ string create_gamemap(int difficulty) {
     //if no coins are created, the map gets recreated without touching other variables like fps, ghost_allowed, difficulty, etc...
     int countedcoins = countcoins();
     if (countedcoins < 1) {
-        srand(time(0)+(rand() % 1000)); // the rand%1000 is meant for the random part (described higher up) :)
+        srand(time(0) + (rand() % 1000)); // the rand%1000 is meant for the random part (described higher up) :)
         create_gamemap(difficulty);
     }
     return "gameMap created";
@@ -159,8 +161,8 @@ string fill_map() {
                 if (rand() % 10 != 0) {
                     gamemap[i][x] = "wall";
                 }
-            
-                else{
+
+                else {
                     //cout << "pisu=" << endl;
                     if (crimson123 == 0) {
                         gamemap[i][x] = "wall1";
@@ -175,9 +177,9 @@ string fill_map() {
 
                 }
             }
-            
-                
-            
+
+
+
             //cout << gamemap[i][x] << " ";
         }
         cout << endl;
@@ -192,43 +194,43 @@ int do_ghost() {
     //cout << "doin ghost" << endl;
 
     if (ghost_allowed) {
-            //create list with 4 elements, each with a list: in each by-list is going to be 3 elements: y,x,distance
-            //sort by distance for (list[1-4][2])
-            // the least distance is the move for us, so we move to y[best][0];x[best][1]
-        
-        
+        //create list with 4 elements, each with a list: in each by-list is going to be 3 elements: y,x,distance
+        //sort by distance for (list[1-4][2])
+        // the least distance is the move for us, so we move to y[best][0];x[best][1]
+
+
         float after_move[4][3]; //after_move(coords and distance)
         for (int i = 0;i < 4;i++) {
             after_move[i][0] = y_ghost;
             after_move[i][1] = x_ghost;
         }
-            //now, that we've filled the blank lists, we add the differences:   
-        //                         direction
-        //0.y  x+     distance     right
-        //1.y+ x      distance     down
-        //2.y  x-     distance     left
-        //3.y- x      distance     up
-        after_move[0][1]+=1;
-        after_move[1][0]+=1;
-        after_move[2][1]-=1;
-        after_move[3][0]-=1;
+        //now, that we've filled the blank lists, we add the differences:   
+    //                         direction
+    //0.y  x+     distance     right
+    //1.y+ x      distance     down
+    //2.y  x-     distance     left
+    //3.y- x      distance     up
+        after_move[0][1] += 1;
+        after_move[1][0] += 1;
+        after_move[2][1] -= 1;
+        after_move[3][0] -= 1;
 
-       
+
         for (int i = 0;i < 4;i++) {
-            float ysq = pow( (y_hero - after_move[i][0]) , 2);//after_move[i][0] would be ghost's y coordinate after the move, "i" is the direction
-            float xsq = pow( (x_hero - after_move[i][1]) , 2);//after_move[i][1] would be ghost's x coordinate after the move
-            float resultsq = sqrt(ysq+xsq);
+            float ysq = pow((y_hero - after_move[i][0]), 2);//after_move[i][0] would be ghost's y coordinate after the move, "i" is the direction
+            float xsq = pow((x_hero - after_move[i][1]), 2);//after_move[i][1] would be ghost's x coordinate after the move
+            float resultsq = sqrt(ysq + xsq);
             //cout << "result number "<<i<< ": " << resultsq << endl;
-            
-            after_move[i][2]= resultsq;
+
+            after_move[i][2] = resultsq;
             //cout <<"aftermove"<< after_move[i][2] << endl;
         }
         int leastnum;
-        float least=100000000000;
+        float least = 100000000000;
         for (int i = 0; i < 4;i++) {
             int after_move_y = after_move[i][0];
             int after_move_x = after_move[i][1];
-            if ((least > after_move[i][2] and gamemap[after_move_y][after_move_x]=="tale") or (least > after_move[i][2] and gamemap[after_move_y][after_move_x] == "coin") ) {
+            if ((least > after_move[i][2] and gamemap[after_move_y][after_move_x] == "tale") or (least > after_move[i][2] and gamemap[after_move_y][after_move_x] == "coin")) {
                 least = after_move[i][2];
                 leastnum = i;
             }
@@ -243,7 +245,7 @@ int do_ghost() {
             window.close();
         }
     }
-    
+
     return 1;
 }
 
@@ -252,7 +254,7 @@ int countcoins() {
     for (int i = 0; i < amountoftalesonscreen; ++i) {
         for (int x = 0; x < amountoftalesonscreen; ++x) {
             if (gamemap[i][x] == "coin") {
-                coinscreated +=1;
+                coinscreated += 1;
 
             }
         }
@@ -263,12 +265,12 @@ int countcoins() {
 }
 
 string print_countdown(int screenpxfr, Font font) {
-    countdown_text.setString(to_string( -(time_passed-3) ));
+    countdown_text.setString(to_string(-(time_passed - 3)));
     countdown_text.setFont(font);
     countdown_text.setCharacterSize(100);
 
-    countdown_text.setFillColor(Color(rand() % 56+200, rand() % 206+50, rand() % 206+50));
-    countdown_text.setPosition(float(screenpxfr/2)-50, 150.f);
+    countdown_text.setFillColor(Color(rand() % 56 + 200, rand() % 206 + 50, rand() % 206 + 50));
+    countdown_text.setPosition(float(screenpxfr / 2) - 50, 150.f);
     window.draw(countdown_text);
 
     return "1";
@@ -276,28 +278,7 @@ string print_countdown(int screenpxfr, Font font) {
 
 
 
-string setupmap_harder(int difficulty) {
-    create_gamemap(difficulty);
-    cout << "finished" << endl;
-    fill_map();
-    countcoins();
 
-
-    gamemap_save[amountoftalesonscreen][amountoftalesonscreen];
-
-    for (int i = 0; i < amountoftalesonscreen; ++i) {
-        for (int x = 0; x < amountoftalesonscreen; ++x) {
-            gamemap_save[i][x] = gamemap[i][x];
-        }
-    }
-    gamemap[1][1] = "1";
-    y_hero = 1;
-    x_hero = 1;
-    y_ghost = 1;
-    x_ghost = 1;
-
-    return"lol";
-}
 
 string setupmap_new(int difficulty) {
     for (int i = 0; i < amountoftalesonscreen; ++i) {
@@ -318,11 +299,8 @@ string setupmap_new(int difficulty) {
             gamemap_save[i][x] = gamemap[i][x];
         }
     }
-    gamemap[1][1] = "1";
-    y_hero = 1;
-    x_hero = 1;
-    y_ghost = 1;
-    x_ghost = 1;
+    gamemap[y_hero][x_hero] = "1";
+    
 
     return"lol";
 }
@@ -445,21 +423,13 @@ int drawmap() {
         cout << "change";
     }
 
-    //bgColor = Color(rand() % 256, rand() % 256, rand() % 256);
     //checking if all coins are picked up, if so then create a new map and reset variables
     if (coinsscore >= coinscreated) {
-        coinsscore_text.setString("all got");
-        difficulty_index++;
-        setupmap_new(difficulty_index);
-        start_timer = time(0);  cout << "new start timer" << endl;
-        ghost_allowed = false;
-        //increasing fps, game getting rapidly harder
-        fps++;
-        coinsscore = 0;
+        reset_variables();
     }
     //if not all picked up then display the score
     else {
-        coinsscore_text.setString("score: " + to_string(coinsscore) + "     fps:"+to_string(int(fps)));
+        coinsscore_text.setString("score: " + to_string(coinsscore) + "     fps:" + to_string(int(fps)));
     }
 
     window.draw(coinsscore_text); //cout << "coinscore" << coinsscore << "coinscreated" << coinscreated << endl;
@@ -468,6 +438,24 @@ int drawmap() {
 
 
     return 1;
+}
+
+
+int reset_variables() {
+    //resetting the random pos variables
+    begin_y = rand() % 10;
+    begin_x = rand() % 10;
+    y_hero = begin_y;
+    x_hero = begin_x;
+    y_ghost = begin_y;
+    x_ghost = begin_x;
+
+    difficulty_index++;
+    setupmap_new(difficulty_index);
+    ghost_allowed = false;
+    //increasing fps, game getting rapidly harder
+    fps++;
+    coinsscore = 0;
 }
 
 
@@ -559,10 +547,10 @@ int main() {
         return EXIT_FAILURE;
 
     if (!hero_texture_right.loadFromFile("images/hero_white_right.png"))
-    return EXIT_FAILURE;
+        return EXIT_FAILURE;
 
     if (!ghost_texture.loadFromFile("images/ghost.png"))
-    return EXIT_FAILURE;
+        return EXIT_FAILURE;
 
 
 
@@ -623,7 +611,7 @@ int main() {
 
         window.clear(bgColor);
 
-        save_y = y_hero;
+        
 
         if (direction != "o") {
             //cout << "CHCKING dirRECTION<<" << endl;
@@ -657,40 +645,40 @@ int main() {
 
         do_ghost();
 
-       
+
         time_t end_timer = time(0);
         time_passed = end_timer - start_timer;
-        if (time_passed <= ghost_time-1) {
+        if (time_passed <= ghost_time - 1) {
             print_countdown(screenpxfr, font);
         }
         else {
             ghost_allowed = true;
-           
+
         }
         /*
         hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
         hero.setScale(heroscale, heroscale);*/
-        
-        
-        
+
+
+
 
 
         window.display();
-    
+
         float sum_sleep = 0;
         float fpos = 1 / fps;
         float secsleep = 0.005;
-        
-        
+
+
 
         if (direction != "o") {
             sf::sleep(sf::seconds(fpos));
         }
 
         direction = checkdirection();
-        
-        
-        
+
+
+
 
 
         bool waiting = true;
@@ -698,38 +686,38 @@ int main() {
             if (direction == "o") {
                 direction = checkdirection();
             }
-            
+
             //cout << "fpos"<<fpos << "|" <<"sum sli[" << sum_sleep <<"|secslip" <<secsleep<< endl;
             //cout << direction;
-            
+
             //cout << fpos;
-           
+
             sf::sleep(sf::seconds(secsleep));
             sum_sleep += secsleep;
-            if (sum_sleep > fpos or direction!="o") {
+            if (sum_sleep > fpos or direction != "o") {
                 waiting = false;
                 //cout << "fpsfin" << endl;
             }
             //*/
         }
-        
+
 
     }
 
     return EXIT_SUCCESS;
-    }
+}
 
 
 
 
-    /*
-    green
-    #4cce0f
+/*
+green
+#4cce0f
 
-    dark green
-    #0f1c08
+dark green
+#0f1c08
 
-    C:\GLP\jopa
+C:\GLP\jopa
 
 
 */
