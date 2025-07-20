@@ -52,11 +52,12 @@ Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture
 Sprite hero, ghost;
 Text coinsscore_text, countdown_text;
 RenderWindow window;
-int plussize, talesize, coinsscore, save_y, timespassed;
+int plussize, talesize, coinsscore, save_y, timespassed, heroscale;
 bool animationbool;
 time_t start_timer;
 int countcoins();
 int reset_variables();
+int talescreated;
 
 
 
@@ -191,61 +192,63 @@ string fill_map() {
 
 int do_ghost() {
 
-    //cout << "doin ghost" << endl;
-
-    if (ghost_allowed) {
-        //create list with 4 elements, each with a list: in each by-list is going to be 3 elements: y,x,distance
-        //sort by distance for (list[1-4][2])
-        // the least distance is the move for us, so we move to y[best][0];x[best][1]
+    //create list with 4 elements, each with a list: in each by-list is going to be 3 elements: y,x,distance
+    //sort by distance for (list[1-4][2])
+    // the least distance is the move for us, so we move to y[best][0];x[best][1]
 
 
-        float after_move[4][3]; //after_move(coords and distance)
-        for (int i = 0;i < 4;i++) {
-            after_move[i][0] = y_ghost;
-            after_move[i][1] = x_ghost;
-        }
+    float after_move[4][3]; //after_move(coords and distance)
+    for (int i = 0;i < 4;i++) {
+        after_move[i][0] = y_ghost;
+        after_move[i][1] = x_ghost;
+    }
         //now, that we've filled the blank lists, we add the differences:   
     //                         direction
     //0.y  x+     distance     right
     //1.y+ x      distance     down
     //2.y  x-     distance     left
     //3.y- x      distance     up
-        after_move[0][1] += 1;
-        after_move[1][0] += 1;
-        after_move[2][1] -= 1;
-        after_move[3][0] -= 1;
+    after_move[0][1] += 1;
+    after_move[1][0] += 1;
+    after_move[2][1] -= 1;
+    after_move[3][0] -= 1;
 
 
-        for (int i = 0;i < 4;i++) {
-            float ysq = pow((y_hero - after_move[i][0]), 2);//after_move[i][0] would be ghost's y coordinate after the move, "i" is the direction
-            float xsq = pow((x_hero - after_move[i][1]), 2);//after_move[i][1] would be ghost's x coordinate after the move
-            float resultsq = sqrt(ysq + xsq);
-            //cout << "result number "<<i<< ": " << resultsq << endl;
+    for (int i = 0;i < 4;i++) {
+        float ysq = pow((y_hero - after_move[i][0]), 2);//after_move[i][0] would be ghost's y coordinate after the move, "i" is the direction
+        float xsq = pow((x_hero - after_move[i][1]), 2);//after_move[i][1] would be ghost's x coordinate after the move
+        float resultsq = sqrt(ysq + xsq);
+        //cout << "result number "<<i<< ": " << resultsq << endl;
 
-            after_move[i][2] = resultsq;
-            //cout <<"aftermove"<< after_move[i][2] << endl;
-        }
-        int leastnum;
-        float least = 100000000000;
-        for (int i = 0; i < 4;i++) {
-            int after_move_y = after_move[i][0];
-            int after_move_x = after_move[i][1];
-            if ((least > after_move[i][2] and gamemap[after_move_y][after_move_x] == "tale") or (least > after_move[i][2] and gamemap[after_move_y][after_move_x] == "coin")) {
-                least = after_move[i][2];
-                leastnum = i;
-            }
-        }
-        y_ghost = after_move[leastnum][0];
-        x_ghost = after_move[leastnum][1];
-        window.draw(ghost);
-
-        //if the ghost is on the same square as the hero is on, hero dies
-        if (y_ghost == y_hero and x_ghost == x_hero) {
-            game_over = true;
-            window.close();
+        after_move[i][2] = resultsq;
+        //cout <<"aftermove"<< after_move[i][2] << endl;
+    }
+    int leastnum;
+    float least = 100000000000;
+    //getting the cheapest path
+    for (int i = 0; i < 4;i++) {
+        int after_move_y = after_move[i][0];
+        int after_move_x = after_move[i][1];
+        //to not go through walls
+        if ((least > after_move[i][2] and gamemap[after_move_y][after_move_x] == "tale") or (least > after_move[i][2] and gamemap[after_move_y][after_move_x] == "coin")) {
+            least = after_move[i][2];
+            leastnum = i;
         }
     }
+    y_ghost = after_move[leastnum][0];
+    x_ghost = after_move[leastnum][1];
+    
 
+    return 1;
+}
+
+
+
+int check_if_dead() {
+    //if the ghost is on the same square as the hero is on, hero dies
+    if (y_ghost == y_hero and x_ghost == x_hero) {
+        game_over = true;
+    }
     return 1;
 }
 
@@ -426,6 +429,7 @@ int drawmap() {
     //checking if all coins are picked up, if so then create a new map and reset variables
     if (coinsscore >= coinscreated) {
         reset_variables();
+        cout << "reseted variables" << endl;
     }
     //if not all picked up then display the score
     else {
@@ -443,12 +447,35 @@ int drawmap() {
 
 int reset_variables() {
     //resetting the random pos variables
-    begin_y = rand() % 10;
-    begin_x = rand() % 10;
+    //random pos now would be a COMPLETELY RANDOM POSITION ON THE MAP
+    for (int i = 0; i < amountoftalesonscreen; ++i) {
+        for (int x = 0; x < amountoftalesonscreen; ++x) {
+            if (gamemap[i][x] == "tale") {
+                talescreated += 1;
+
+            }
+        }
+    }
+    int randtale = rand() % talescreated;
+    
+    for (int i = 0; i < amountoftalesonscreen; ++i) {
+        for (int x = 0; x < amountoftalesonscreen; ++x) {
+            randtale--;
+            if (randtale==1) {
+              
+                begin_y = i;
+                begin_x = x;
+            }
+        }
+    }
+    
     y_hero = begin_y;
     x_hero = begin_x;
     y_ghost = begin_y;
     x_ghost = begin_x;
+
+    start_timer = time(0);
+
 
     difficulty_index++;
     setupmap_new(difficulty_index);
@@ -626,10 +653,7 @@ int main() {
         hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
         hero.setScale(heroscale, heroscale);
 
-        ghost.setTexture(ghost_texture);
-        ghost.setPosition(plussize + x_ghost * talescale * 4, plussize + y_ghost * talescale * 4);
-        ghost.setScale(heroscale, heroscale);
-
+        
 
         for (int i = 0; i < amountoftalesonscreen; ++i) {
             for (int x = 0; x < amountoftalesonscreen; ++x) {
@@ -643,8 +667,19 @@ int main() {
         //draws the entire map and all the othуr sprites
         drawmap();
 
-        do_ghost();
+        if (ghost_allowed) {
+            do_ghost();
+            //draw_ghost();
+            //i could NOT put the drawing of a ghost in a function
+            //😡
+            ghost.setTexture(ghost_texture);
+            ghost.setPosition(plussize + x_ghost * talescale * 4, plussize + y_ghost * talescale * 4);
+            ghost.setScale(heroscale, heroscale);
+            window.draw(ghost);
 
+            check_if_dead();
+        }
+        
 
         time_t end_timer = time(0);
         time_passed = end_timer - start_timer;
@@ -664,6 +699,10 @@ int main() {
 
 
         window.display();
+
+        if (game_over) {
+            window.close();
+        }
 
         float sum_sleep = 0;
         float fpos = 1 / fps;
