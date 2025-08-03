@@ -11,7 +11,8 @@
 using namespace std;
 using namespace sf;
 
-
+int musicvolume;
+int miscvolume;
 
 string checkdirection() {
     // WASD
@@ -32,7 +33,7 @@ string checkdirection() {
 int begin_y = rand() % 10;
 int begin_x = rand() % 10;
 const int amountoftalesonscreen = 22;
-string gamemap[amountoftalesonscreen][amountoftalesonscreen], gamemap_save[amountoftalesonscreen][amountoftalesonscreen];
+string gamemap[amountoftalesonscreen][amountoftalesonscreen], gamemap_save[amountoftalesonscreen][amountoftalesonscreen], menu[amountoftalesonscreen][amountoftalesonscreen];
 int coinrand = 60;
 
 string direction = "w";
@@ -48,16 +49,19 @@ int difficulty_index = -2;
 bool game_over = false;
 bool startbutton_clicked = false;
 bool ghost_allowed = false;
-Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture;
+Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture,bg_texture;
 Sprite hero, ghost;
-Text coinsscore_text, countdown_text;
+Text coinsscore_text, countdown_text, start_text;
+Font font;
 RenderWindow window;
 int plussize, talesize, coinsscore, save_y, timespassed, heroscale;
 bool animationbool;
 time_t start_timer;
 int countcoins();
 int reset_variables();
-int talescreated;
+int talescreated,screenpxfr;
+bool gamescreen = false;
+bool startscreen = true;
 
 
 
@@ -84,6 +88,7 @@ string create_gamemap(int difficulty) {
         int x_wall_length = rand() % (amountoftalesonscreen / 3 - 1) + amountoftalesonscreen / 6;
 
         if (y_walls_amount > 0) {
+
             if ((y_wall_coordinate + y_wall_length < amountoftalesonscreen) and (y_wall_coordinate - y_wall_length >= 0)) {
                 goplus = rand() % 2 == 1;
             }
@@ -438,9 +443,6 @@ int drawmap() {
 
     window.draw(coinsscore_text); //cout << "coinscore" << coinsscore << "coinscreated" << coinscreated << endl;
     window.draw(hero);
-
-
-
     return 1;
 }
 
@@ -451,8 +453,7 @@ int reset_variables() {
     for (int i = 0; i < amountoftalesonscreen; ++i) {
         for (int x = 0; x < amountoftalesonscreen; ++x) {
             if (gamemap[i][x] == "tale") {
-                talescreated += 1;
-
+                talescreated++;
             }
         }
     }
@@ -462,7 +463,6 @@ int reset_variables() {
         for (int x = 0; x < amountoftalesonscreen; ++x) {
             randtale--;
             if (randtale==1) {
-              
                 begin_y = i;
                 begin_x = x;
             }
@@ -485,10 +485,81 @@ int reset_variables() {
     coinsscore = 0;
 }
 
+int gamescreen_do() {
+
+    if (direction != "o") {
+        //cout << "CHCKING dirRECTION<<" << endl;
+        string direction = checkdirection();
+    }
+    // переменная для героя, всегда вне условий
+    //Sprite hero;
+
+    hero_set_texture();
+
+    // устанавливаем позицию и масштаб — ОБЩИЕ для всех направлений
+    hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
+    hero.setScale(heroscale, heroscale);
+
+
+
+    for (int i = 0; i < amountoftalesonscreen; ++i) {
+        for (int x = 0; x < amountoftalesonscreen; ++x) {
+            gamemap[i][x] = gamemap_save[i][x];
+        }
+    }
+    //gamemap[y_hero][x_hero] = "1";
+
+
+
+    //draws the entire map and all the othуr sprites
+    drawmap();
+
+    if (ghost_allowed) {
+        do_ghost();
+        //draw_ghost();
+        //i could NOT put the drawing of a ghost in a function
+        //😡
+        ghost.setTexture(ghost_texture);
+        ghost.setPosition(plussize + x_ghost * talescale * 4, plussize + y_ghost * talescale * 4);
+        ghost.setScale(heroscale, heroscale);
+        window.draw(ghost);
+
+        check_if_dead();
+    }
+
+
+    time_t end_timer = time(0);
+    time_passed = end_timer - start_timer;
+    if (time_passed <= ghost_time - 1) {
+        print_countdown(screenpxfr, font);
+    }
+    else {
+        ghost_allowed = true;
+
+    }
+    /*
+    hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
+    hero.setScale(heroscale, heroscale);*/
+
+
+    return 1;
+}
+
+int startscreen_do() {
+
+    Sprite bg(bg_texture);
+    bg.setPosition(0,0);
+    bg.setScale( 5.34,5.34);
+    window.draw(bg);
+
+    window.draw(start_text);
+
+    return 1;
+}
 
 int main() {
 
-    fps = 5;
+    fps = 10;
     srand(time(0)); // <-- делает rand() случайным каждый раз
 
     const int screensize = 800;
@@ -496,8 +567,8 @@ int main() {
 
     int screenpx = screensize - (screensize % amountoftalesonscreen);
     cout << screenpx << "," << screensize % amountoftalesonscreen << endl;
-    int screenpxfr = screenpx + plussize * 2;
-    window.create(VideoMode(screenpxfr, screenpxfr + 40), "SFML Image Box");
+    int screenpxfr = screenpx;
+    window.create(VideoMode(screenpxfr, screenpxfr ), "SFML Image Box");
 
 
     talescale = screenpx / amountoftalesonscreen / 4.00001;
@@ -511,18 +582,27 @@ int main() {
     setupmap_new(difficulty_index);
     start_timer = time(0);
 
-    Font font;
-    if (!font.loadFromFile("opensans.ttf"))
+    
+    if (!font.loadFromFile("fonts/PressStart2P.ttf"))
         return EXIT_FAILURE;
     coinsscore = 0;
-    // текст        coinsscore_text.setString("balls: " + to_string(coinsscore));
 
     coinsscore_text.setFont(font);
     coinsscore_text.setCharacterSize(40);
     coinsscore_text.setString("score:" + to_string(coinsscore));
 
     coinsscore_text.setFillColor(Color::White);
-    coinsscore_text.setPosition(10.f, float(screenpxfr - 10));
+    coinsscore_text.setPosition(10.f, float(screenpxfr - 10)); 
+    
+    
+    start_text.setFont(font);
+    start_text.setCharacterSize(40);
+    start_text.setString("START");
+
+    start_text.setFillColor(Color(5,255,255,100));
+    start_text.setPosition(20,250);
+
+
 
     // coin
     //Texture coin_texture;
@@ -581,6 +661,10 @@ int main() {
 
 
 
+    if (!bg_texture.loadFromFile("images/background_1.png"))
+        return EXIT_FAILURE;
+
+
     animationbool = true;
     Color bgColor = Color::Black;
 
@@ -627,74 +711,27 @@ int main() {
             if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left)
             {
                 Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
-                /*if (field2.getGlobalBounds().contains(mousePos))
+                if (start_text.getGlobalBounds().contains(mousePos))
                 {
-                    bgColor = Color(rand() % 256, rand() % 256, rand() % 256);
-                    text.setString("clicked balls!");
+                    startscreen = false;
 
-                }*/
+                }
             }
         }
 
         window.clear(bgColor);
 
-        
-
-        if (direction != "o") {
-            //cout << "CHCKING dirRECTION<<" << endl;
-            string direction = checkdirection();
-        }
-        // переменная для героя, всегда вне условий
-        //Sprite hero;
-
-        hero_set_texture();
-
-        // устанавливаем позицию и масштаб — ОБЩИЕ для всех направлений
-        hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
-        hero.setScale(heroscale, heroscale);
-
-        
-
-        for (int i = 0; i < amountoftalesonscreen; ++i) {
-            for (int x = 0; x < amountoftalesonscreen; ++x) {
-                gamemap[i][x] = gamemap_save[i][x];
-            }
-        }
-        //gamemap[y_hero][x_hero] = "1";
 
 
-
-        //draws the entire map and all the othуr sprites
-        drawmap();
-
-        if (ghost_allowed) {
-            do_ghost();
-            //draw_ghost();
-            //i could NOT put the drawing of a ghost in a function
-            //😡
-            ghost.setTexture(ghost_texture);
-            ghost.setPosition(plussize + x_ghost * talescale * 4, plussize + y_ghost * talescale * 4);
-            ghost.setScale(heroscale, heroscale);
-            window.draw(ghost);
-
-            check_if_dead();
-        }
-        
-
-        time_t end_timer = time(0);
-        time_passed = end_timer - start_timer;
-        if (time_passed <= ghost_time - 1) {
-            print_countdown(screenpxfr, font);
-        }
-        else {
-            ghost_allowed = true;
+        //if supposed to show game screen:
+        if (gamescreen) {
+            gamescreen_do();
 
         }
-        /*
-        hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
-        hero.setScale(heroscale, heroscale);*/
 
-
+        else if (startscreen) {
+            startscreen_do();
+        }
 
 
 
