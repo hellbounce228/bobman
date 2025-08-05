@@ -49,7 +49,7 @@ int difficulty_index = -2;
 bool game_over = false;
 bool startbutton_clicked = false;
 bool ghost_allowed = false;
-Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture,bg_texture;
+Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture,bg_texture,black_bg_texture;
 Sprite hero, ghost;
 Text coinsscore_text, countdown_text, start_text;
 Font font;
@@ -62,7 +62,7 @@ int reset_variables();
 int talescreated,screenpxfr;
 bool gamescreen = false;
 bool startscreen = true;
-
+bool difficultyscreen = false;
 
 
 string create_gamemap(int difficulty) {
@@ -549,11 +549,38 @@ int startscreen_do() {
 
     Sprite bg(bg_texture);
     bg.setPosition(0,0);
-    bg.setScale( 5.34,5.34);
+    bg.setScale( 1,1);
     window.draw(bg);
 
     window.draw(start_text);
 
+    return 1;
+}
+
+int start_cutscene() {
+    //textures
+    Sprite bg(bg_texture);
+    Sprite black_bg(black_bg_texture);
+
+    //i cycle, the background zooms up,
+    //and
+    //the black bg gamma goes up,
+    //so basically you get an effect of you walking in the hall
+    for (float i = 0; i < 3; i += 0.1) {
+
+        bg.setPosition((-i*400), (-i*350));
+        bg.setScale(1+i, 1+i);
+
+        window.draw(bg);
+
+        black_bg.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(0.25f * i * 255)));
+        window.draw(black_bg);
+
+
+        window.display();
+
+        sf::sleep(sf::seconds(0.024));
+    }
     return 1;
 }
 
@@ -661,7 +688,9 @@ int main() {
 
 
 
-    if (!bg_texture.loadFromFile("images/background_1.png"))
+    if (!bg_texture.loadFromFile("images/background_2_800.png"))
+        return EXIT_FAILURE;
+    if (!black_bg_texture.loadFromFile("images/black_800.png"))
         return EXIT_FAILURE;
 
 
@@ -711,10 +740,13 @@ int main() {
             if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left)
             {
                 Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
+
+                //if start button was pressed, go to the difficulty choosing screen thru the cutscene
                 if (start_text.getGlobalBounds().contains(mousePos))
                 {
+                    start_cutscene();
                     startscreen = false;
-
+                    difficultyscreen = true;
                 }
             }
         }
