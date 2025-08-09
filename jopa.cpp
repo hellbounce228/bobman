@@ -49,9 +49,9 @@ int difficulty_index = -2;
 bool game_over = false;
 bool startbutton_clicked = false;
 bool ghost_allowed = false;
-Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture,bg_texture,black_bg_texture;
+Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture, bg_texture, black_bg_texture;
 Sprite hero, ghost;
-Text coinsscore_text, countdown_text, start_text;
+Text coinsscore_text, countdown_text, start_text, easy_difficulty_text, medium_difficulty_text, hard_difficulty_text;
 Font font;
 RenderWindow window;
 int plussize, talesize, coinsscore, save_y, timespassed, heroscale;
@@ -59,7 +59,7 @@ bool animationbool;
 time_t start_timer;
 int countcoins();
 int reset_variables();
-int talescreated,screenpxfr;
+int talescreated, screenpxfr;
 bool gamescreen = false;
 bool startscreen = true;
 bool difficultyscreen = false;
@@ -207,12 +207,12 @@ int do_ghost() {
         after_move[i][0] = y_ghost;
         after_move[i][1] = x_ghost;
     }
-        //now, that we've filled the blank lists, we add the differences:   
-    //                         direction
-    //0.y  x+     distance     right
-    //1.y+ x      distance     down
-    //2.y  x-     distance     left
-    //3.y- x      distance     up
+    //now, that we've filled the blank lists, we add the differences:   
+//                         direction
+//0.y  x+     distance     right
+//1.y+ x      distance     down
+//2.y  x-     distance     left
+//3.y- x      distance     up
     after_move[0][1] += 1;
     after_move[1][0] += 1;
     after_move[2][1] -= 1;
@@ -242,7 +242,7 @@ int do_ghost() {
     }
     y_ghost = after_move[leastnum][0];
     x_ghost = after_move[leastnum][1];
-    
+
 
     return 1;
 }
@@ -308,7 +308,7 @@ string setupmap_new(int difficulty) {
         }
     }
     gamemap[y_hero][x_hero] = "1";
-    
+
 
     return"lol";
 }
@@ -458,17 +458,17 @@ int reset_variables() {
         }
     }
     int randtale = rand() % talescreated;
-    
+
     for (int i = 0; i < amountoftalesonscreen; ++i) {
         for (int x = 0; x < amountoftalesonscreen; ++x) {
             randtale--;
-            if (randtale==1) {
+            if (randtale == 1) {
                 begin_y = i;
                 begin_x = x;
             }
         }
     }
-    
+
     y_hero = begin_y;
     x_hero = begin_x;
     y_ghost = begin_y;
@@ -491,8 +491,6 @@ int gamescreen_do() {
         //cout << "CHCKING dirRECTION<<" << endl;
         string direction = checkdirection();
     }
-    // переменная для героя, всегда вне условий
-    //Sprite hero;
 
     hero_set_texture();
 
@@ -548,8 +546,8 @@ int gamescreen_do() {
 int startscreen_do() {
 
     Sprite bg(bg_texture);
-    bg.setPosition(0,0);
-    bg.setScale( 1,1);
+    bg.setPosition(0, 0);
+    bg.setScale(1, 1);
     window.draw(bg);
 
     window.draw(start_text);
@@ -568,8 +566,8 @@ int start_cutscene() {
     //so basically you get an effect of you walking in the hall
     for (float i = 0; i < 3; i += 0.1) {
 
-        bg.setPosition((-i*400), (-i*350));
-        bg.setScale(1+i, 1+i);
+        bg.setPosition((-i * 400), (-i * 350));
+        bg.setScale(1 + i, 1 + i);
 
         window.draw(bg);
 
@@ -584,6 +582,8 @@ int start_cutscene() {
     return 1;
 }
 
+//int menu_text(Text text_sprite, )
+
 int main() {
 
     fps = 10;
@@ -595,7 +595,7 @@ int main() {
     int screenpx = screensize - (screensize % amountoftalesonscreen);
     cout << screenpx << "," << screensize % amountoftalesonscreen << endl;
     int screenpxfr = screenpx;
-    window.create(VideoMode(screenpxfr, screenpxfr ), "SFML Image Box");
+    window.create(VideoMode(screenpxfr, screenpxfr), "SFML Image Box");
 
 
     talescale = screenpx / amountoftalesonscreen / 4.00001;
@@ -609,7 +609,7 @@ int main() {
     setupmap_new(difficulty_index);
     start_timer = time(0);
 
-    
+
     if (!font.loadFromFile("fonts/PressStart2P.ttf"))
         return EXIT_FAILURE;
     coinsscore = 0;
@@ -619,15 +619,15 @@ int main() {
     coinsscore_text.setString("score:" + to_string(coinsscore));
 
     coinsscore_text.setFillColor(Color::White);
-    coinsscore_text.setPosition(10.f, float(screenpxfr - 10)); 
-    
-    
+    coinsscore_text.setPosition(10.f, float(screenpxfr - 10));
+
+
     start_text.setFont(font);
     start_text.setCharacterSize(40);
     start_text.setString("START");
 
-    start_text.setFillColor(Color(5,255,255,100));
-    start_text.setPosition(20,250);
+    start_text.setFillColor(Color(5, 255, 255, 100));
+    start_text.setPosition(20, 250);
 
 
 
@@ -734,7 +734,7 @@ int main() {
                     window.close();
 
 
-
+            
 
             // клик по спрайту
             if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left)
@@ -744,10 +744,16 @@ int main() {
                 //if start button was pressed, go to the difficulty choosing screen thru the cutscene
                 if (start_text.getGlobalBounds().contains(mousePos))
                 {
-                    start_cutscene();
+
                     startscreen = false;
                     difficultyscreen = true;
+
                 }
+                // if (easy_difficulty_text.getGlobalBounds().contains(mousePos) or medium_difficulty_text.getGlobalBounds().contains(mousePos) or hard _difficulty_text.getGlobalBounds().contains(mousePos)) {
+               
+                    // }
+                     //start_cutscene();
+
             }
         }
 
