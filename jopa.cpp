@@ -11,8 +11,8 @@
 using namespace std;
 using namespace sf;
 
-int musicvolume;
-int miscvolume;
+//int musicvolume;
+//int miscvolume;
 
 string checkdirection() {
     // WASD
@@ -49,9 +49,10 @@ int difficulty_index = -2;
 bool game_over = false;
 bool startbutton_clicked = false;
 bool ghost_allowed = false;
-Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture, bg_texture, black_bg_texture;
+Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture, bg_start_texture, bg_difficulty_texture, black_bg_texture, tick_texture;
 Sprite hero, ghost;
-Text coinsscore_text, countdown_text, start_text, easy_difficulty_text, medium_difficulty_text, hard_difficulty_text;
+Color bgColor;
+Text coinsscore_text, countdown_text, start_text, easy_difficulty_text, medium_difficulty_text, hard_difficulty_text, quit_text, settings_text, music_text, back_text;
 Font font;
 RenderWindow window;
 int plussize, talesize, coinsscore, save_y, timespassed, heroscale;
@@ -60,9 +61,17 @@ time_t start_timer;
 int countcoins();
 int reset_variables();
 int talescreated, screenpxfr;
-bool gamescreen = false;
 bool startscreen = true;
+bool gamescreen = false;
 bool difficultyscreen = false;
+bool settingsscreen = false;
+
+
+bool musicon=true;
+
+sf::RectangleShape ticksquare(sf::Vector2f(40, 40));
+
+
 
 
 string create_gamemap(int difficulty) {
@@ -543,46 +552,134 @@ int gamescreen_do() {
     return 1;
 }
 
+
 int startscreen_do() {
 
-    Sprite bg(bg_texture);
+    Sprite bg(bg_start_texture);
     bg.setPosition(0, 0);
     bg.setScale(1, 1);
     window.draw(bg);
 
     window.draw(start_text);
+    window.draw(settings_text);
+    window.draw(quit_text);
 
     return 1;
 }
 
-int start_cutscene() {
-    //textures
-    Sprite bg(bg_texture);
+int settingsscreen_do() {
+    Sprite bg(bg_start_texture);
+    bg.setPosition(0, 0);
+    bg.setScale(1, 1);
+    window.draw(bg);
+
+    
+
+    ticksquare.setFillColor(sf::Color(100, 100, 100, 200));
+    ticksquare.setPosition(230, 327);
+    window.draw(ticksquare);
+
+    if (musicon) {
+        Sprite tick(tick_texture);
+        tick.setPosition(227, 320);
+        tick.setScale(1, 1);
+        window.draw(tick);
+    }
+
+    window.draw(music_text);
+    
+    window.draw(back_text);
+    
+
+    return 1;
+}
+
+int difficultyscreen_do() {
+    Sprite bg(bg_difficulty_texture);
+    bg.setPosition(0, 0);
+    bg.setScale(1, 1);
+    window.draw(bg);
+
+    //window.draw();
+
+    return 1;
+}
+
+int start_cutscene(int mode) {//1==start   2==difficulty
+    Sprite bg;
+    cout << "mode:" << mode << endl;
+    //deciding textures
+    if (mode == 1) {
+        bg.setTexture(bg_start_texture);
+        cout << "startmode" << endl;
+    }
+    else if (mode == 2) {
+        bg.setTexture(bg_difficulty_texture);
+        cout << "difficultymode" << endl;
+
+    }
+    
     Sprite black_bg(black_bg_texture);
 
     //i cycle, the background zooms up,
     //and
     //the black bg gamma goes up,
     //so basically you get an effect of you walking in the hall
-    for (float i = 0; i < 3; i += 0.1) {
+    for (float i = 0; i < 3; i += 0.03) {
 
         bg.setPosition((-i * 400), (-i * 350));
         bg.setScale(1 + i, 1 + i);
 
-        window.draw(bg);
 
-        black_bg.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(0.25f * i * 255)));
+        black_bg.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(0.33f * i * 255)));
+
+        window.draw(bg);
         window.draw(black_bg);
 
 
         window.display();
 
-        sf::sleep(sf::seconds(0.024));
+        sf::sleep(sf::seconds(0.012));
     }
+    //after the fade in, change bg and fade out
+    sf::sleep(sf::seconds(0.5));
+    window.clear(bgColor);
+
+    //fade out:
+    if (mode == 1) {
+        bg.setTexture(bg_difficulty_texture);
+        bg.setPosition(1, 1);
+        bg.setScale(1, 1);
+        for (float i = 3; i > 0; i -= 0.03) {
+            int proz = 0.33f * i * 255;
+
+            black_bg.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(proz)));
+
+            
+            window.draw(bg);
+            window.draw(black_bg);
+
+
+            window.display();
+
+            sf::sleep(sf::seconds(0.012));
+        }
+    }
+
     return 1;
 }
 
-//int menu_text(Text text_sprite, )
+
+int menu_text_initialize(Text& text_sprite, String text) {
+    text_sprite.setFont(font);
+    text_sprite.setCharacterSize(40);
+    text_sprite.setString(text);
+
+    //text_sprite.setFillColor(Color(5, 255, 255, 100));
+    text_sprite.setFillColor(Color(100, 100, 100, 255));
+
+    return 1;
+}
 
 int main() {
 
@@ -614,22 +711,25 @@ int main() {
         return EXIT_FAILURE;
     coinsscore = 0;
 
-    coinsscore_text.setFont(font);
-    coinsscore_text.setCharacterSize(40);
-    coinsscore_text.setString("score:" + to_string(coinsscore));
-
-    coinsscore_text.setFillColor(Color::White);
+    menu_text_initialize(coinsscore_text,to_string(coinsscore));
     coinsscore_text.setPosition(10.f, float(screenpxfr - 10));
 
-
-    start_text.setFont(font);
-    start_text.setCharacterSize(40);
-    start_text.setString("START");
-
-    start_text.setFillColor(Color(5, 255, 255, 100));
+    menu_text_initialize(start_text,"START");
     start_text.setPosition(20, 250);
 
+    menu_text_initialize(settings_text, "SETTINGS");
+    settings_text.setPosition(20, 330);
+    
+    menu_text_initialize(quit_text, "QUIT");
+    quit_text.setPosition(20, 410);
+    
+    menu_text_initialize(music_text, "MUSIC");
+    music_text.setPosition(20, 330);
 
+    menu_text_initialize(back_text, "BACK");
+    back_text.setPosition(20, 410);
+
+    
 
     // coin
     //Texture coin_texture;
@@ -688,14 +788,21 @@ int main() {
 
 
 
-    if (!bg_texture.loadFromFile("images/background_2_800.png"))
+    if (!bg_start_texture.loadFromFile("images/start_bg.png"))
+        return EXIT_FAILURE;
+    if (!bg_difficulty_texture.loadFromFile("images/difficulty_bg.png"))
         return EXIT_FAILURE;
     if (!black_bg_texture.loadFromFile("images/black_800.png"))
         return EXIT_FAILURE;
 
 
+    if (!tick_texture.loadFromFile("images/tick.png"))
+        return EXIT_FAILURE;
+
+
     animationbool = true;
     Color bgColor = Color::Black;
+
 
     sf::Music intromusic;
     if (!intromusic.openFromFile("images/intro.ogg")) {
@@ -709,7 +816,7 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    intromusic.setVolume(20);
+    intromusic.setVolume(100);
     intromusic.play();
     bool musicintro = true;
 
@@ -721,7 +828,7 @@ int main() {
             if (musicintro == true) {
                 if (intromusic.getStatus() == sf::SoundSource::Stopped) {
                     loopmusic.setLoop(true);     // чтобы играла по кругу
-                    loopmusic.setVolume(20);     // громкость от 0 до 100
+                    loopmusic.setVolume(100);     // громкость от 0 до 100
                     loopmusic.play();
                     musicintro = false;
                 }
@@ -741,18 +848,57 @@ int main() {
             {
                 Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
 
-                //if start button was pressed, go to the difficulty choosing screen thru the cutscene
-                if (start_text.getGlobalBounds().contains(mousePos))
-                {
+                cout << startscreen << endl;
+                if (startscreen) {
+                    cout << "startscreen" << endl;
+                    //if start button was pressed, go to the difficulty choosing screen thru the cutscene
+                    if (start_text.getGlobalBounds().contains(mousePos)){
+                        cout << "containsyooo" << endl;
+                        start_cutscene(1);
+                        startscreen = false;
+                        difficultyscreen = true;
 
-                    startscreen = false;
-                    difficultyscreen = true;
+                    }
 
+                    else if (settings_text.getGlobalBounds().contains(mousePos)) {
+                        startscreen = false;
+                        settingsscreen = true;
+                    }
+
+                    else if (quit_text.getGlobalBounds().contains(mousePos)) {
+
+                        window.close();
+
+                    }
                 }
-                // if (easy_difficulty_text.getGlobalBounds().contains(mousePos) or medium_difficulty_text.getGlobalBounds().contains(mousePos) or hard _difficulty_text.getGlobalBounds().contains(mousePos)) {
-               
-                    // }
-                     //start_cutscene();
+
+                if (settingsscreen) {
+                    if (ticksquare.getGlobalBounds().contains(mousePos)) {
+                        
+                        if (musicon) {
+
+                            loopmusic.setVolume(0);
+                            musicon = false;
+                        }
+                        else if (!musicon) {
+                            loopmusic.setVolume(100);
+                            musicon = true;
+                        }
+
+                        
+                    }
+
+                    else if (back_text.getGlobalBounds().contains(mousePos)) {
+                        startscreen = true;
+                        settingsscreen = false;
+                    }
+                }
+                
+
+                if (easy_difficulty_text.getGlobalBounds().contains(mousePos) or medium_difficulty_text.getGlobalBounds().contains(mousePos) or hard_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                        start_cutscene(2);
+                    }
+                     //
 
             }
         }
@@ -764,13 +910,19 @@ int main() {
         //if supposed to show game screen:
         if (gamescreen) {
             gamescreen_do();
-
         }
 
         else if (startscreen) {
             startscreen_do();
         }
 
+        else if (difficultyscreen) {
+            difficultyscreen_do();
+        }
+
+        if (settingsscreen) {
+            settingsscreen_do();
+        }
 
 
         window.display();
