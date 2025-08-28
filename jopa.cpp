@@ -52,7 +52,7 @@ bool ghost_allowed = false;
 Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture, bg_start_texture, bg_difficulty_texture, black_bg_texture, tick_texture;
 Sprite hero, ghost;
 Color bgColor;
-Text coinsscore_text, countdown_text, start_text, easy_difficulty_text, medium_difficulty_text, hard_difficulty_text, quit_text, settings_text, music_text, back_text;
+Text coinsscore_text, countdown_text, start_text, easy_difficulty_text, medium_difficulty_text, hard_difficulty_text, impossible_difficulty_text, quit_text, settings_text, music_text, back_text;
 Font font;
 RenderWindow window;
 int plussize, talesize, coinsscore, save_y, timespassed, heroscale;
@@ -65,6 +65,7 @@ bool startscreen = true;
 bool gamescreen = false;
 bool difficultyscreen = false;
 bool settingsscreen = false;
+bool difficulty_animation_should = false;
 
 
 bool musicon=true;
@@ -489,8 +490,18 @@ int reset_variables() {
     difficulty_index++;
     setupmap_new(difficulty_index);
     ghost_allowed = false;
+
     //increasing fps, game getting rapidly harder
-    fps++;
+
+    if (fps < 6+difficulty_level){
+        fps++;
+    }
+    else if (difficulty_level == 4) {
+        if (fps < 6 + difficulty_level * 2) {
+            fps++;
+        }
+    }
+    
     coinsscore = 0;
 }
 
@@ -596,11 +607,16 @@ int settingsscreen_do() {
 
 int difficultyscreen_do() {
     Sprite bg(bg_difficulty_texture);
-    bg.setPosition(0, 0);
-    bg.setScale(1, 1);
+    
+
     window.draw(bg);
 
-    //window.draw();
+
+
+    window.draw(easy_difficulty_text);
+    window.draw(medium_difficulty_text);
+    window.draw(hard_difficulty_text);
+    window.draw(impossible_difficulty_text);
 
     return 1;
 }
@@ -615,6 +631,7 @@ int start_cutscene(int mode) {//1==start   2==difficulty
     }
     else if (mode == 2) {
         bg.setTexture(bg_difficulty_texture);
+
         cout << "difficultymode" << endl;
 
     }
@@ -655,8 +672,7 @@ int start_cutscene(int mode) {//1==start   2==difficulty
 
             black_bg.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(proz)));
 
-            
-            window.draw(bg);
+            difficultyscreen_do();
             window.draw(black_bg);
 
 
@@ -683,7 +699,7 @@ int menu_text_initialize(Text& text_sprite, String text) {
 
 int main() {
 
-    fps = 10;
+    fps = 6;
     srand(time(0)); // <-- делает rand() случайным каждый раз
 
     const int screensize = 800;
@@ -730,6 +746,19 @@ int main() {
     back_text.setPosition(20, 410);
 
     
+    menu_text_initialize(easy_difficulty_text, "EASY");
+    easy_difficulty_text.setPosition(20, 250);
+
+    menu_text_initialize(medium_difficulty_text, "MEDIUM");
+    medium_difficulty_text.setPosition(20, 330);
+
+    menu_text_initialize(hard_difficulty_text, "HARD");
+    hard_difficulty_text.setPosition(20, 410);
+    
+    menu_text_initialize(impossible_difficulty_text, "ULTRA");
+    impossible_difficulty_text.setPosition(20, 490);
+
+
 
     // coin
     //Texture coin_texture;
@@ -850,6 +879,7 @@ int main() {
 
                 cout << startscreen << endl;
                 if (startscreen) {
+                    difficulty_animation_should = false;
                     cout << "startscreen" << endl;
                     //if start button was pressed, go to the difficulty choosing screen thru the cutscene
                     if (start_text.getGlobalBounds().contains(mousePos)){
@@ -874,9 +904,8 @@ int main() {
 
                 if (settingsscreen) {
                     if (ticksquare.getGlobalBounds().contains(mousePos)) {
-                        
-                        if (musicon) {
 
+                        if (musicon) {
                             loopmusic.setVolume(0);
                             musicon = false;
                         }
@@ -884,24 +913,52 @@ int main() {
                             loopmusic.setVolume(100);
                             musicon = true;
                         }
-
-                        
                     }
 
-                    else if (back_text.getGlobalBounds().contains(mousePos)) {
+                    if (back_text.getGlobalBounds().contains(mousePos)) {
                         startscreen = true;
                         settingsscreen = false;
                     }
+
+                    
                 }
-                
 
-                if (easy_difficulty_text.getGlobalBounds().contains(mousePos) or medium_difficulty_text.getGlobalBounds().contains(mousePos) or hard_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                if (difficultyscreen) {
+                    cout << "bobclick" << endl;
+                    if (easy_difficulty_text.getGlobalBounds().contains(mousePos) or medium_difficulty_text.getGlobalBounds().contains(mousePos) or hard_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                        if (difficulty_animation_should) {
                         start_cutscene(2);
-                    }
-                     //
 
+
+                        if (easy_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                            difficulty_level = 1;
+                        }
+                        
+                        else if (medium_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                            difficulty_level = 2;
+                        }
+                        else if (hard_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                            difficulty_level = 3;
+                        }
+                        else if (impossible_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                            difficulty_level = 4;
+                        }
+                        
+                        
+                        }
+                        difficulty_animation_should = true;
+                        sf::sleep(sf::seconds(1));
+                        
+                        cout << "bob" << endl;
+
+                        fps = 4 + difficulty_level * 2;
+                    }
+
+                }
             }
+                           
         }
+    
 
         window.clear(bgColor);
 
