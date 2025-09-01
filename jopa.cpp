@@ -1,3 +1,5 @@
+
+
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 
@@ -35,6 +37,8 @@ int begin_x = rand() % 10;
 const int amountoftalesonscreen = 22;
 string gamemap[amountoftalesonscreen][amountoftalesonscreen], gamemap_save[amountoftalesonscreen][amountoftalesonscreen], menu[amountoftalesonscreen][amountoftalesonscreen];
 int coinrand = 60;
+int talewidthinpx;
+
 
 string direction = "w";
 int coinscreated = 0;
@@ -42,33 +46,33 @@ int y_hero = begin_y;
 int x_hero = begin_x;
 int y_ghost = begin_y;
 int x_ghost = begin_x;
-int ghost_time = 3;
+int ghost_time = 4;
 int time_passed = 0;
-float talescale, fps;
+float talescale, heroscale, fps;
 int difficulty_index = -2;
 bool game_over = false;
 bool startbutton_clicked = false;
 bool ghost_allowed = false;
-Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture, bg_start_texture, bg_difficulty_texture, black_bg_texture, tick_texture;
+Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture, bg_start_texture, bg_difficulty_texture, black_bg_texture, tick_texture, game_over_bg_texture;
 Sprite hero, ghost;
 Color bgColor;
-Text coinsscore_text, countdown_text, start_text, easy_difficulty_text, medium_difficulty_text, hard_difficulty_text, impossible_difficulty_text, quit_text, settings_text, music_text, back_text;
+Text score_text, countdown_text, start_text, easy_difficulty_text, medium_difficulty_text, hard_difficulty_text, impossible_difficulty_text, quit_text, settings_text, music_text, back_text;
 Font font;
 RenderWindow window;
-int plussize, talesize, coinsscore, save_y, timespassed, heroscale;
+int plussize, talesize, coinsscore, save_y, timespassed, score;
 bool animationbool;
 time_t start_timer;
 int countcoins();
 int reset_variables();
 int talescreated, screenpxfr;
-bool startscreen = true;
-bool gamescreen = false;
+bool startscreen = false;
+bool gamescreen = true;
 bool difficultyscreen = false;
 bool settingsscreen = false;
 bool difficulty_animation_should = false;
+int difficulty_level = 1;
 
-
-bool musicon=true;
+bool musicon = true;
 
 sf::RectangleShape ticksquare(sf::Vector2f(40, 40));
 
@@ -263,6 +267,7 @@ int check_if_dead() {
     //if the ghost is on the same square as the hero is on, hero dies
     if (y_ghost == y_hero and x_ghost == x_hero) {
         game_over = true;
+        gamescreen = false;
     }
     return 1;
 }
@@ -283,12 +288,12 @@ int countcoins() {
 }
 
 string print_countdown(int screenpxfr, Font font) {
-    countdown_text.setString(to_string(-(time_passed - 3)));
+    countdown_text.setString(to_string(-(time_passed - 4)));
     countdown_text.setFont(font);
     countdown_text.setCharacterSize(100);
 
     countdown_text.setFillColor(Color(rand() % 56 + 200, rand() % 206 + 50, rand() % 206 + 50));
-    countdown_text.setPosition(float(screenpxfr / 2) - 50, 150.f);
+    countdown_text.setPosition(325.f, 150.f);
     window.draw(countdown_text);
 
     return "1";
@@ -299,25 +304,29 @@ string print_countdown(int screenpxfr, Font font) {
 
 
 string setupmap_new(int difficulty) {
+    //fill the whole map with walls
     for (int i = 0; i < amountoftalesonscreen; ++i) {
         for (int x = 0; x < amountoftalesonscreen; ++x) {
             gamemap[i][x] = "wall";
         }
     }
+    //fill some with tales(blank spaces) and create a few coins
     create_gamemap(difficulty);
     cout << "finished" << endl;
+    //fill the walls with random bloody walls
     fill_map();
+    //count the coins
     countcoins();
 
-
+    //save the map so it will reset after every hero move(i know its unoptimized stfu)
     gamemap_save[amountoftalesonscreen][amountoftalesonscreen];
-
     for (int i = 0; i < amountoftalesonscreen; ++i) {
         for (int x = 0; x < amountoftalesonscreen; ++x) {
             gamemap_save[i][x] = gamemap[i][x];
         }
     }
-    gamemap[y_hero][x_hero] = "1";
+
+    //gamemap[y_hero][x_hero] = "1";
 
 
     return"lol";
@@ -372,6 +381,7 @@ int hero_set_texture() {
         }
     }
     else {
+        //cout << "idle hero texture" << endl;
         // стоим на месте
         hero.setTexture(hero_texture);
     }
@@ -389,8 +399,10 @@ int drawmap() {
 
 
                 Sprite field2(field_texture);
-                field2.setPosition(plussize + x * talescale * 4, plussize + i * talescale * 4);
-                field2.setScale(talescale * 0.25, talescale * 0.25);
+                field2.setColor(sf::Color(100, 100, 100));
+
+                field2.setPosition(plussize + x * talescale * talewidthinpx, plussize + i * talescale * talewidthinpx);
+                field2.setScale(talescale, talescale);
                 window.draw(field2);
 
                 tailsplaced++;
@@ -405,8 +417,8 @@ int drawmap() {
                 if (gamemap[i][x] == "wall3") { wall.setTexture(crimson_wall_texture3); }
 
 
-                wall.setPosition(plussize + x * talescale * 4, plussize + i * talescale * 4);
-                wall.setScale(talescale * 0.25, talescale * 0.25);
+                wall.setPosition(plussize + x * talescale * talewidthinpx, plussize + i * talescale * talewidthinpx);
+                wall.setScale(talescale, talescale);
                 window.draw(wall);
 
                 tailsplaced++;
@@ -415,14 +427,14 @@ int drawmap() {
 
 
                 Sprite field2(field_texture);
-                field2.setPosition(plussize + x * talescale * 4, plussize + i * talescale * 4);
-                field2.setScale(talescale * 0.25, talescale * 0.25);
+                field2.setPosition(plussize + x * talescale * talewidthinpx, plussize + i * talescale * talewidthinpx);
+                field2.setScale(talescale, talescale);
                 window.draw(field2);
                 //cout << "coim" << endl;
 
                 Sprite coin(coin_texture);
-                coin.setPosition(plussize + x * talescale * 4, plussize + i * talescale * 4);
-                coin.setScale(talescale * 0.25, talescale * 0.25);
+                coin.setPosition(plussize + x * talescale * talewidthinpx, plussize + i * talescale * talewidthinpx);
+                coin.setScale(talescale, talescale);
                 window.draw(coin);
                 tailsplaced++;
             }
@@ -448,10 +460,11 @@ int drawmap() {
     }
     //if not all picked up then display the score
     else {
-        coinsscore_text.setString("score: " + to_string(coinsscore) + "     fps:" + to_string(int(fps)));
+        score_text.setString("score: " + to_string(score) + "     fps:" + to_string(int(fps)));
     }
 
-    window.draw(coinsscore_text); //cout << "coinscore" << coinsscore << "coinscreated" << coinscreated << endl;
+    window.draw (score_text); //cout << "coinscore" << coinsscore << "coinscreated" << coinscreated << endl;
+
     window.draw(hero);
     return 1;
 }
@@ -493,7 +506,7 @@ int reset_variables() {
 
     //increasing fps, game getting rapidly harder
 
-    if (fps < 6+difficulty_level){
+    if (fps < 6 + difficulty_level) {
         fps++;
     }
     else if (difficulty_level == 4) {
@@ -501,8 +514,28 @@ int reset_variables() {
             fps++;
         }
     }
-    
+
     coinsscore = 0;
+}
+
+int gameoverscreen_do() {
+    window.clear(bgColor);
+
+    drawmap();
+
+    RectangleShape darkOverlay(Vector2f(window.getSize()));
+    darkOverlay.setFillColor(Color(0, 0, 0, 200)); // 100 = прозрачность
+
+
+    window.draw(darkOverlay);  // потом затемнение
+
+    Sprite bg(game_over_bg_texture);
+    bg.setPosition(124, 100);
+    bg.setScale(1.5, 1.5);
+    window.draw(bg);
+
+
+    return 1;
 }
 
 int gamescreen_do() {
@@ -515,7 +548,7 @@ int gamescreen_do() {
     hero_set_texture();
 
     // устанавливаем позицию и масштаб — ОБЩИЕ для всех направлений
-    hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
+    hero.setPosition(plussize + x_hero * talescale * talewidthinpx, plussize + y_hero * talescale * talewidthinpx);
     hero.setScale(heroscale, heroscale);
 
 
@@ -538,7 +571,7 @@ int gamescreen_do() {
         //i could NOT put the drawing of a ghost in a function
         //😡
         ghost.setTexture(ghost_texture);
-        ghost.setPosition(plussize + x_ghost * talescale * 4, plussize + y_ghost * talescale * 4);
+        ghost.setPosition(plussize + x_ghost * talescale * talewidthinpx, plussize + y_ghost * talescale * talewidthinpx);
         ghost.setScale(heroscale, heroscale);
         window.draw(ghost);
 
@@ -558,6 +591,7 @@ int gamescreen_do() {
     /*
     hero.setPosition(plussize + x_hero * talescale * 4, plussize + y_hero * talescale * 4);
     hero.setScale(heroscale, heroscale);*/
+    window.draw(hero);
 
 
     return 1;
@@ -584,7 +618,7 @@ int settingsscreen_do() {
     bg.setScale(1, 1);
     window.draw(bg);
 
-    
+
 
     ticksquare.setFillColor(sf::Color(100, 100, 100, 200));
     ticksquare.setPosition(230, 327);
@@ -598,16 +632,16 @@ int settingsscreen_do() {
     }
 
     window.draw(music_text);
-    
+
     window.draw(back_text);
-    
+
 
     return 1;
 }
 
 int difficultyscreen_do() {
     Sprite bg(bg_difficulty_texture);
-    
+
 
     window.draw(bg);
 
@@ -635,7 +669,7 @@ int start_cutscene(int mode) {//1==start   2==difficulty
         cout << "difficultymode" << endl;
 
     }
-    
+
     Sprite black_bg(black_bg_texture);
 
     //i cycle, the background zooms up,
@@ -643,6 +677,7 @@ int start_cutscene(int mode) {//1==start   2==difficulty
     //the black bg gamma goes up,
     //so basically you get an effect of you walking in the hall
     for (float i = 0; i < 3; i += 0.03) {
+        window.clear(bgColor);
 
         bg.setPosition((-i * 400), (-i * 350));
         bg.setScale(1 + i, 1 + i);
@@ -664,13 +699,17 @@ int start_cutscene(int mode) {//1==start   2==difficulty
 
     //fade out:
     if (mode == 1) {
+
         bg.setTexture(bg_difficulty_texture);
         bg.setPosition(1, 1);
         bg.setScale(1, 1);
         for (float i = 3; i > 0; i -= 0.03) {
-            int proz = 0.33f * i * 255;
+            window.clear(bgColor);
 
-            black_bg.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(proz)));
+
+            int brightness_index = 0.33f * i * 255;
+
+            black_bg.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(brightness_index)));
 
             difficultyscreen_do();
             window.draw(black_bg);
@@ -703,16 +742,17 @@ int main() {
     srand(time(0)); // <-- делает rand() случайным каждый раз
 
     const int screensize = 800;
-    plussize = 10;
+    plussize = 3;
 
     int screenpx = screensize - (screensize % amountoftalesonscreen);
     cout << screenpx << "," << screensize % amountoftalesonscreen << endl;
     int screenpxfr = screenpx;
-    window.create(VideoMode(screenpxfr, screenpxfr), "SFML Image Box");
+    window.create(VideoMode(screenpxfr + plussize * 2, screenpxfr + plussize * 2), "SFML Image Box");
 
 
-    talescale = screenpx / amountoftalesonscreen / 4.00001;
-    float heroscale = screenpx / amountoftalesonscreen / 20.00001;
+    talescale = screenpx / amountoftalesonscreen / 16.01;
+    heroscale = screenpx / amountoftalesonscreen / 20.01;
+
     if (heroscale < 1) {
         heroscale = 0.8;
     }
@@ -727,25 +767,26 @@ int main() {
         return EXIT_FAILURE;
     coinsscore = 0;
 
-    menu_text_initialize(coinsscore_text,to_string(coinsscore));
-    coinsscore_text.setPosition(10.f, float(screenpxfr - 10));
+    menu_text_initialize (score_text, to_string(coinsscore));
+    score_text.setPosition(10.f, float(screenpxfr - 20));
+    score_text.setCharacterSize(20);
 
-    menu_text_initialize(start_text,"START");
+    menu_text_initialize(start_text, "START");
     start_text.setPosition(20, 250);
 
     menu_text_initialize(settings_text, "SETTINGS");
     settings_text.setPosition(20, 330);
-    
+
     menu_text_initialize(quit_text, "QUIT");
     quit_text.setPosition(20, 410);
-    
+
     menu_text_initialize(music_text, "MUSIC");
     music_text.setPosition(20, 330);
 
     menu_text_initialize(back_text, "BACK");
     back_text.setPosition(20, 410);
 
-    
+
     menu_text_initialize(easy_difficulty_text, "EASY");
     easy_difficulty_text.setPosition(20, 250);
 
@@ -754,7 +795,7 @@ int main() {
 
     menu_text_initialize(hard_difficulty_text, "HARD");
     hard_difficulty_text.setPosition(20, 410);
-    
+
     menu_text_initialize(impossible_difficulty_text, "ULTRA");
     impossible_difficulty_text.setPosition(20, 490);
 
@@ -767,17 +808,19 @@ int main() {
 
     // текстура и спрайт
     //Texture field_texture;
-    if (!field_texture.loadFromFile("images/grass_3.png"))
+    if (!field_texture.loadFromFile("images/grass.png"))
         return EXIT_FAILURE;
 
 
 
     int crimsonchance = rand() % 4;
     int crimson123 = rand() % 3;
+    talewidthinpx = 16;
 
     //Texture wall_texture;
     if (!wall_texture.loadFromFile("images/bricks_3.png"))
         return EXIT_FAILURE;
+
     //Texture crimson_wall_texture1;
     if (!crimson_wall_texture1.loadFromFile("images/bricks_crimson_1.png"))
         return EXIT_FAILURE;
@@ -817,6 +860,8 @@ int main() {
 
 
 
+    if (!game_over_bg_texture.loadFromFile("images/game_over_bg.png"))
+        return EXIT_FAILURE;
     if (!bg_start_texture.loadFromFile("images/start_bg.png"))
         return EXIT_FAILURE;
     if (!bg_difficulty_texture.loadFromFile("images/difficulty_bg.png"))
@@ -870,7 +915,7 @@ int main() {
                     window.close();
 
 
-            
+
 
             // клик по спрайту
             if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left)
@@ -882,7 +927,7 @@ int main() {
                     difficulty_animation_should = false;
                     cout << "startscreen" << endl;
                     //if start button was pressed, go to the difficulty choosing screen thru the cutscene
-                    if (start_text.getGlobalBounds().contains(mousePos)){
+                    if (start_text.getGlobalBounds().contains(mousePos)) {
                         cout << "containsyooo" << endl;
                         start_cutscene(1);
                         startscreen = false;
@@ -920,45 +965,52 @@ int main() {
                         settingsscreen = false;
                     }
 
-                    
+
                 }
 
                 if (difficultyscreen) {
                     cout << "bobclick" << endl;
                     if (easy_difficulty_text.getGlobalBounds().contains(mousePos) or medium_difficulty_text.getGlobalBounds().contains(mousePos) or hard_difficulty_text.getGlobalBounds().contains(mousePos)) {
                         if (difficulty_animation_should) {
-                        start_cutscene(2);
+                            start_cutscene(2);
 
 
-                        if (easy_difficulty_text.getGlobalBounds().contains(mousePos)) {
-                            difficulty_level = 1;
+                            if (easy_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                                difficulty_level = 1;
+                            }
+
+                            else if (medium_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                                difficulty_level = 2;
+                            }
+                            else if (hard_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                                difficulty_level = 3;
+                            }
+                            else if (impossible_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                                difficulty_level = 4;
+                            }
+
+
+                            fps = 4 + difficulty_level * 2;
+
+                            gamescreen = true;
+                            difficultyscreen = false;
+                            start_timer = time(0);
                         }
-                        
-                        else if (medium_difficulty_text.getGlobalBounds().contains(mousePos)) {
-                            difficulty_level = 2;
-                        }
-                        else if (hard_difficulty_text.getGlobalBounds().contains(mousePos)) {
-                            difficulty_level = 3;
-                        }
-                        else if (impossible_difficulty_text.getGlobalBounds().contains(mousePos)) {
-                            difficulty_level = 4;
-                        }
-                        
-                        
-                        }
+
+
                         difficulty_animation_should = true;
                         sf::sleep(sf::seconds(1));
-                        
+
                         cout << "bob" << endl;
 
-                        fps = 4 + difficulty_level * 2;
+
                     }
 
                 }
             }
-                           
+
         }
-    
+
 
         window.clear(bgColor);
 
@@ -977,16 +1029,18 @@ int main() {
             difficultyscreen_do();
         }
 
-        if (settingsscreen) {
+        else if (settingsscreen) {
             settingsscreen_do();
         }
 
+        else if (game_over) {
+            gameoverscreen_do();
+            cout << "gameoverscreen" << endl;
+        }
 
         window.display();
 
-        if (game_over) {
-            window.close();
-        }
+
 
         float sum_sleep = 0;
         float fpos = 1 / fps;
