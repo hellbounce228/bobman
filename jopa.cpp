@@ -51,11 +51,10 @@ int ghost_time = 4;
 int time_passed = 0;
 float talescale, heroscale, fps;
 int difficulty_index = -2;
-bool game_over = false;
 bool startbutton_clicked = false;
 bool ghost_allowed = false;
-Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture, bg_start_texture, bg_difficulty_texture, black_bg_texture, tick_texture, game_over_bg_texture;
-Sprite hero, ghost;
+Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture, bg_start_texture, bg_difficulty_texture, black_bg_texture, tick_texture, game_over_bg_texture, settings_button_texture, replay_button_texture, menu_button_texture;
+Sprite hero, ghost, replay_button, settings_button, menu_button;
 Color bgColor;
 Text score_text, countdown_text, start_text, easy_difficulty_text, medium_difficulty_text, hard_difficulty_text, impossible_difficulty_text, quit_text, settings_text, music_text, back_text;
 Font font;
@@ -71,9 +70,14 @@ bool gamescreen = false;
 bool difficultyscreen = false;
 bool settingsscreen = false;
 bool difficulty_animation_should = false;
+bool game_over = false;
+
+bool backtogame = false;
+
 int difficulty_level = 1;
 int coinscollected;
 int levelscompleted;
+int music_volume = 100;
 
 int ghostdistance;
 int ghostscore;
@@ -262,12 +266,14 @@ int do_ghost() {
         }
     }
 
-    //putting the distance from ghost to player in a variable that is then used to count score
-    ghostdistance = -(leastnum - amountoftalesonscreen);
+    
     
     y_ghost = after_move[leastnum][0];
     x_ghost = after_move[leastnum][1];
 
+
+    //putting the distance from ghost to player in a variable that is then used to count score
+    ghostdistance = -(after_move[leastnum][2] - 8);
 
     return 1;
 }
@@ -427,7 +433,7 @@ int drawmap() {
 
 
                 Sprite field2(field_texture);
-                field2.setColor(sf::Color(100, 100, 100));
+                //field2.setColor(sf::Color(100, 100, 100));
 
                 field2.setPosition(plussize + x * talescale * talewidthinpx, plussize + i * talescale * talewidthinpx);
                 field2.setScale(talescale, talescale);
@@ -550,6 +556,18 @@ int reset_variables() {
     coinsscore = 0;
 }
 
+int reset_variables_fully() {
+
+    reset_variables();
+    levelscompleted = 0;
+    ghostdistance = 0;
+    coinscollected = 0;
+    ghostscore = 0;
+    ghost_allowed = false;
+
+    return 1;
+}
+
 int gameoverscreen_do() {
     window.clear(bgColor);
 
@@ -562,9 +580,32 @@ int gameoverscreen_do() {
     window.draw(darkOverlay);  // потом затемнение
 
     Sprite bg(game_over_bg_texture);
-    bg.setPosition(124, 100);
-    bg.setScale(1.5, 1.5);
+    
+    float bgscale = 1.25;
+
+    //we recalculate the position for the scale beacause when trying to find the good-looking scale i kept fckin up
+    bg.setPosition(400 - (364 / 2 * bgscale), 400 - (381 / 2 * bgscale) );
+    bg.setScale(bgscale,bgscale);
+    cout << bgscale << endl;
     window.draw(bg);
+
+
+    replay_button.setTexture(replay_button_texture);
+    replay_button.setPosition(265, 500);
+    replay_button.setScale(1, 1);
+    window.draw(replay_button);
+
+    settings_button.setTexture(settings_button_texture);
+    settings_button.setPosition(367, 500);
+    settings_button.setScale(1, 1);
+    window.draw(settings_button);
+
+    menu_button.setTexture(menu_button_texture);
+    menu_button.setPosition(465, 500);
+    menu_button.setScale(0.4, 0.4);
+    window.draw(menu_button);
+
+   
 
 
     return 1;
@@ -645,6 +686,9 @@ int startscreen_do() {
 }
 
 int settingsscreen_do() {
+
+    
+
     Sprite bg(bg_start_texture);
     bg.setPosition(0, 0);
     bg.setScale(1, 1);
@@ -664,7 +708,8 @@ int settingsscreen_do() {
     }
 
     window.draw(music_text);
-
+    
+    back_text.setPosition(20, 410);
     window.draw(back_text);
 
 
@@ -683,6 +728,10 @@ int difficultyscreen_do() {
     window.draw(medium_difficulty_text);
     window.draw(hard_difficulty_text);
     window.draw(impossible_difficulty_text);
+
+    back_text.setPosition(20, 560);
+    window.draw(back_text);
+
 
     return 1;
 }
@@ -762,7 +811,6 @@ int menu_text_initialize(Text& text_sprite, String text) {
     text_sprite.setCharacterSize(40);
     text_sprite.setString(text);
 
-    //text_sprite.setFillColor(Color(5, 255, 255, 100));
     text_sprite.setFillColor(Color(100, 100, 100, 255));
 
     return 1;
@@ -814,11 +862,13 @@ int main() {
     menu_text_initialize(quit_text, "QUIT");
     quit_text.setPosition(20, 410);
 
+
     menu_text_initialize(music_text, "MUSIC");
     music_text.setPosition(20, 330);
 
     menu_text_initialize(back_text, "BACK");
     back_text.setPosition(20, 410);
+    back_text.setCharacterSize(30);
 
 
     menu_text_initialize(easy_difficulty_text, "EASY");
@@ -842,7 +892,7 @@ int main() {
 
     // текстура и спрайт
     //Texture field_texture;
-    if (!field_texture.loadFromFile("images/grass.png"))
+    if (!field_texture.loadFromFile("images/grass_dark_0_BW.png"))
         return EXIT_FAILURE;
 
 
@@ -894,12 +944,26 @@ int main() {
 
 
 
+    if (!settings_button_texture.loadFromFile("images/settings_button.png"))
+        return EXIT_FAILURE;
+
+    if (!replay_button_texture.loadFromFile("images/replay_button.png"))
+        return EXIT_FAILURE;
+
+    if (!menu_button_texture.loadFromFile("images/menu_button.png"))
+        return EXIT_FAILURE;
+
+
+
     if (!game_over_bg_texture.loadFromFile("images/game_over_bg.png"))
         return EXIT_FAILURE;
+
     if (!bg_start_texture.loadFromFile("images/start_bg.png"))
         return EXIT_FAILURE;
+
     if (!bg_difficulty_texture.loadFromFile("images/difficulty_bg.png"))
         return EXIT_FAILURE;
+
     if (!black_bg_texture.loadFromFile("images/black_800.png"))
         return EXIT_FAILURE;
 
@@ -936,7 +1000,7 @@ int main() {
             if (musicintro == true) {
                 if (intromusic.getStatus() == sf::SoundSource::Stopped) {
                     loopmusic.setLoop(true);     // чтобы играла по кругу
-                    loopmusic.setVolume(100);     // громкость от 0 до 100
+                    loopmusic.setVolume(music_volume);     // громкость от 0 до 100
                     loopmusic.play();
                     musicintro = false;
                 }
@@ -951,7 +1015,6 @@ int main() {
 
 
 
-            // клик по спрайту
             if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left)
             {
                 Vector2f mousePos(event.mouseButton.x, event.mouseButton.y);
@@ -981,30 +1044,66 @@ int main() {
                     }
                 }
 
+                if (game_over) {
+                    if (replay_button.getGlobalBounds().contains(mousePos)) {
+                        game_over = false;
+                        reset_variables_fully();
+                        
+                        gamescreen = true;
+
+                    }
+                
+                    else if (settings_button.getGlobalBounds().contains(mousePos)) {
+                        game_over = false;
+                        settingsscreen = true;
+                        backtogame = true;
+                        reset_variables_fully();
+
+                    }
+
+                    else if (menu_button.getGlobalBounds().contains(mousePos)) {
+                        game_over = false;
+                        difficultyscreen = true;
+                        reset_variables_fully();
+
+                    }
+                
+                }
+
                 if (settingsscreen) {
                     if (ticksquare.getGlobalBounds().contains(mousePos)) {
 
                         if (musicon) {
                             loopmusic.setVolume(0);
+                            intromusic.setVolume(0);
+                            music_volume = 0;
                             musicon = false;
                         }
                         else if (!musicon) {
                             loopmusic.setVolume(100);
+                            intromusic.setVolume(100);
+                            music_volume = 100;
                             musicon = true;
                         }
                     }
 
                     if (back_text.getGlobalBounds().contains(mousePos)) {
-                        startscreen = true;
                         settingsscreen = false;
+                        
+                        //if the settings button was clicked after the gameover, when you click back from it you get to the difficulty menu
+                        if (backtogame) {
+                            difficultyscreen = true;
+                        }
+                        else {
+                            startscreen = true;
+                        }
                     }
-
 
                 }
 
                 if (difficultyscreen) {
                     cout << "bobclick" << endl;
-                    if (easy_difficulty_text.getGlobalBounds().contains(mousePos) or medium_difficulty_text.getGlobalBounds().contains(mousePos) or hard_difficulty_text.getGlobalBounds().contains(mousePos)) {
+                    if (easy_difficulty_text.getGlobalBounds().contains(mousePos) or medium_difficulty_text.getGlobalBounds().contains(mousePos) or hard_difficulty_text.getGlobalBounds().contains(mousePos) or impossible_difficulty_text.getGlobalBounds().contains(mousePos)) {
                         if (difficulty_animation_should) {
                             start_cutscene(2);
 
@@ -1021,10 +1120,15 @@ int main() {
                             }
                             else if (impossible_difficulty_text.getGlobalBounds().contains(mousePos)) {
                                 difficulty_level = 4;
+                                cout << "impsbl" << endl;
                             }
 
 
                             fps = 4 + difficulty_level * 2;
+
+
+                            float diffby2 = difficulty_level / 2;
+                            coinrand = 30;
 
                             gamescreen = true;
                             difficultyscreen = false;
@@ -1034,14 +1138,20 @@ int main() {
                             auto start_score_timer = std::chrono::high_resolution_clock::now();
                         }
 
+                        
 
                         difficulty_animation_should = true;
-                        sf::sleep(sf::seconds(1));
+                        //sf::sleep(sf::seconds(1));
 
                         cout << "bob" << endl;
 
 
                     }
+
+                    if (back_text.getGlobalBounds().contains(mousePos)) {
+                            difficultyscreen = false;
+                            startscreen = true;
+                        }
 
                 }
             }
@@ -1072,7 +1182,6 @@ int main() {
 
         else if (game_over) {
             gameoverscreen_do();
-            cout << "gameoverscreen" << endl;
         }
 
         window.display();
