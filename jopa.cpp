@@ -37,7 +37,7 @@ int begin_y = rand() % 10;
 int begin_x = rand() % 10;
 const int amountoftalesonscreen = 22;
 string gamemap[amountoftalesonscreen][amountoftalesonscreen], gamemap_save[amountoftalesonscreen][amountoftalesonscreen], menu[amountoftalesonscreen][amountoftalesonscreen];
-int coinrand = 60;
+int coinrand = 20;
 int talewidthinpx;
 
 
@@ -176,6 +176,7 @@ string create_gamemap(int difficulty) {
     return "gameMap created";
 }
 
+//fills the map with bloody walls
 string fill_map() {
     for (int i = 0; i < amountoftalesonscreen; i++) {
         for (int x = 0; x < amountoftalesonscreen;x++) {
@@ -262,7 +263,7 @@ int do_ghost() {
     }
 
     //putting the distance from ghost to player in a variable that is then used to count score
-    ghostdistance = leastnum;
+    ghostdistance = -(leastnum - amountoftalesonscreen);
     
     y_ghost = after_move[leastnum][0];
     x_ghost = after_move[leastnum][1];
