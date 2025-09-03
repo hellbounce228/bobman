@@ -8,6 +8,7 @@
 #include <ctime>
 #include <iostream>
 #include <string>
+#include <chrono>
 
 
 using namespace std;
@@ -65,17 +66,22 @@ time_t start_timer;
 int countcoins();
 int reset_variables();
 int talescreated, screenpxfr;
-bool startscreen = false;
-bool gamescreen = true;
+bool startscreen = true;
+bool gamescreen = false;
 bool difficultyscreen = false;
 bool settingsscreen = false;
 bool difficulty_animation_should = false;
 int difficulty_level = 1;
+int coinscollected;
+int levelscompleted;
+
+int ghostdistance;
+int ghostscore;
 
 bool musicon = true;
 
 sf::RectangleShape ticksquare(sf::Vector2f(40, 40));
-
+auto start_score_timer = std::chrono::high_resolution_clock::now();
 
 
 
@@ -222,11 +228,11 @@ int do_ghost() {
         after_move[i][1] = x_ghost;
     }
     //now, that we've filled the blank lists, we add the differences:   
-//                         direction
-//0.y  x+     distance     right
-//1.y+ x      distance     down
-//2.y  x-     distance     left
-//3.y- x      distance     up
+    //                         direction
+    //0.y  x+     distance     right
+    //1.y+ x      distance     down
+    //2.y  x-     distance     left
+    //3.y- x      distance     up
     after_move[0][1] += 1;
     after_move[1][0] += 1;
     after_move[2][1] -= 1;
@@ -254,6 +260,10 @@ int do_ghost() {
             leastnum = i;
         }
     }
+
+    //putting the distance from ghost to player in a variable that is then used to count score
+    ghostdistance = leastnum;
+    
     y_ghost = after_move[leastnum][0];
     x_ghost = after_move[leastnum][1];
 
@@ -298,9 +308,6 @@ string print_countdown(int screenpxfr, Font font) {
 
     return "1";
 }
-
-
-
 
 
 string setupmap_new(int difficulty) {
@@ -388,6 +395,26 @@ int hero_set_texture() {
     return 0;
 }
 
+int countscore() {
+    //endind the score timer and getting the amount of ms that passed since you've started
+    auto end_score_timer = std::chrono::high_resolution_clock::now();
+    int ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_score_timer - start_score_timer).count();
+
+    //score=(ms/100 + coinscollected*100 + levelscompleted*500 + ghostcount*20) fps;
+    ghostscore += ghostdistance;
+    score = (coinscollected * 100 + levelscompleted * 500 + ghostscore) * fps;
+    if (difficulty_level == 2) {
+        score * 1.5;
+    }
+    else if (difficulty_level == 3) {
+        score * 2;
+    }
+    else if (difficulty_level == 4) {
+        score * 5;
+    }
+
+    return 1;
+}
 
 int drawmap() {
 
@@ -448,6 +475,7 @@ int drawmap() {
     //check for coin
     if (gamemap[y_hero][x_hero] == "coin") {
         coinsscore++;
+        coinscollected++;
         gamemap[y_hero][x_hero] = "tale";
         gamemap_save[y_hero][x_hero] = "tale";
         cout << "change";
@@ -456,10 +484,13 @@ int drawmap() {
     //checking if all coins are picked up, if so then create a new map and reset variables
     if (coinsscore >= coinscreated) {
         reset_variables();
+        levelscompleted++;
         cout << "reseted variables" << endl;
     }
     //if not all picked up then display the score
     else {
+        //only count score if the game is running
+        if (gamescreen) { countscore(); }
         score_text.setString("score: " + to_string(score) + "     fps:" + to_string(int(fps)));
     }
 
@@ -760,8 +791,10 @@ int main() {
 
     // Call the create_gamemap function
     setupmap_new(difficulty_index);
+    //starting the timer for the countdown in the beginning
     start_timer = time(0);
-
+    
+    
 
     if (!font.loadFromFile("fonts/PressStart2P.ttf"))
         return EXIT_FAILURE;
@@ -995,6 +1028,9 @@ int main() {
                             gamescreen = true;
                             difficultyscreen = false;
                             start_timer = time(0);
+
+                            //starting the timer for the score(you get score for the amount of ms that you are alive)
+                            auto start_score_timer = std::chrono::high_resolution_clock::now();
                         }
 
 
