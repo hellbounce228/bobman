@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <ctime>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <chrono>
 
@@ -56,17 +57,17 @@ bool ghost_allowed = false;
 Texture field_texture, wall_texture, crimson_wall_texture1, crimson_wall_texture2, crimson_wall_texture3, coin_texture, hero_texture, hero_texture_up1, hero_texture_up2, hero_texture_down1, hero_texture_down2, hero_texture_left, hero_texture_right, ghost_texture, bg_start_texture, bg_difficulty_texture, black_bg_texture, tick_texture, game_over_bg_texture, settings_button_texture, replay_button_texture, menu_button_texture;
 Sprite hero, ghost, replay_button, settings_button, menu_button;
 Color bgColor;
-Text score_text, countdown_text, start_text, easy_difficulty_text, medium_difficulty_text, hard_difficulty_text, impossible_difficulty_text, quit_text, settings_text, music_text, back_text;
+Text score_text, countdown_text, start_text, easy_difficulty_text, medium_difficulty_text, hard_difficulty_text, impossible_difficulty_text, quit_text, settings_text, music_text, back_text, score_only_text, score_int_text, score_best_int_text, score_best_new_only_text, score_best_only_text;
 Font font;
 RenderWindow window;
-int plussize, talesize, coinsscore, save_y, timespassed, score;
+int plussize, talesize, coinsscore, save_y, timespassed, score, best_score;
 bool animationbool;
 time_t start_timer;
 int countcoins();
 int reset_variables();
 int talescreated, screenpxfr;
-bool startscreen = true;
-bool gamescreen = false;
+bool startscreen = false;
+bool gamescreen = true;
 bool difficultyscreen = false;
 bool settingsscreen = false;
 bool difficulty_animation_should = false;
@@ -273,7 +274,10 @@ int do_ghost() {
 
 
     //putting the distance from ghost to player in a variable that is then used to count score
-    ghostdistance = -(after_move[leastnum][2] - 8);
+    ghostdistance = -(after_move[leastnum][2] - 12);
+    if (after_move[leastnum][2] > 16) {
+        ghostdistance = -50;
+    }
 
     return 1;
 }
@@ -586,26 +590,40 @@ int gameoverscreen_do() {
     //we recalculate the position for the scale beacause when trying to find the good-looking scale i kept fckin up
     bg.setPosition(400 - (364 / 2 * bgscale), 400 - (381 / 2 * bgscale) );
     bg.setScale(bgscale,bgscale);
-    cout << bgscale << endl;
     window.draw(bg);
 
 
-    replay_button.setTexture(replay_button_texture);
-    replay_button.setPosition(265, 500);
-    replay_button.setScale(1, 1);
     window.draw(replay_button);
 
-    settings_button.setTexture(settings_button_texture);
-    settings_button.setPosition(367, 500);
-    settings_button.setScale(1, 1);
     window.draw(settings_button);
 
-    menu_button.setTexture(menu_button_texture);
-    menu_button.setPosition(465, 500);
-    menu_button.setScale(0.4, 0.4);
     window.draw(menu_button);
 
-   
+    
+    
+
+    score_int_text.setString(to_string(score));
+
+    window.draw(score_int_text);
+    window.draw(score_only_text);
+
+    if (score >= best_score) {
+        ofstream Infofile;
+        Infofile.open("fonts/Data.txt");
+        Infofile << to_string(score);
+        Infofile.close();
+        best_score = score;
+
+        score_best_new_only_text.setFillColor(Color(rand() % 56 + 200, rand() % 206 + 50, rand() % 206 + 50));
+        window.draw(score_best_new_only_text);
+
+
+    }
+
+    window.draw(score_best_only_text);
+
+    score_best_int_text.setString(to_string(score));
+    window.draw(score_best_int_text);
 
 
     return 1;
@@ -817,6 +835,18 @@ int menu_text_initialize(Text& text_sprite, String text) {
 }
 
 int main() {
+    //getting the score from a file
+    ifstream
+        Infofile("fonts/Data.txt");
+
+    string line;
+    while (getline(Infofile, line)) {
+        best_score = stoi(line);  
+        cout << best_score<<"bestscore" << endl;
+    }
+    
+    Infofile.close();
+
 
     fps = 6;
     srand(time(0)); // <-- делает rand() случайным каждый раз
@@ -883,6 +913,27 @@ int main() {
     menu_text_initialize(impossible_difficulty_text, "ULTRA");
     impossible_difficulty_text.setPosition(20, 490);
 
+    menu_text_initialize(score_only_text, "SCORE");
+    score_only_text.setPosition(330, 230);
+    score_only_text.setCharacterSize(30);
+
+    menu_text_initialize(score_int_text, to_string(score));
+    score_int_text.setPosition(340, 280);
+    score_int_text.setCharacterSize(25);
+
+    menu_text_initialize(score_best_new_only_text, "NEW BEST SCORE!!!");
+    score_best_new_only_text.setPosition(230, 330);
+    score_best_new_only_text.setCharacterSize(20);
+
+    menu_text_initialize(score_best_int_text, to_string(score));
+    score_best_int_text.setPosition(340, 450);
+    score_best_int_text.setCharacterSize(25);
+
+    menu_text_initialize(score_best_only_text, "BEST SCORE");
+    score_best_only_text.setPosition(280, 400);
+    score_best_only_text.setCharacterSize(25);
+    
+
 
 
     // coin
@@ -892,7 +943,7 @@ int main() {
 
     // текстура и спрайт
     //Texture field_texture;
-    if (!field_texture.loadFromFile("images/grass_dark_0_BW.png"))
+    if (!field_texture.loadFromFile("images/grass_dark_1_BW.png"))
         return EXIT_FAILURE;
 
 
@@ -943,15 +994,23 @@ int main() {
         return EXIT_FAILURE;
 
 
+    if (!replay_button_texture.loadFromFile("images/replay_button.png"))
+            return EXIT_FAILURE;
+    replay_button.setTexture(replay_button_texture);
+    replay_button.setPosition(265, 500);
+    replay_button.setScale(1, 1);
 
     if (!settings_button_texture.loadFromFile("images/settings_button.png"))
         return EXIT_FAILURE;
-
-    if (!replay_button_texture.loadFromFile("images/replay_button.png"))
-        return EXIT_FAILURE;
+    settings_button.setTexture(settings_button_texture);
+    settings_button.setPosition(367, 500);
+    settings_button.setScale(1, 1);
 
     if (!menu_button_texture.loadFromFile("images/menu_button.png"))
         return EXIT_FAILURE;
+    menu_button.setTexture(menu_button_texture);
+    menu_button.setPosition(465, 500);
+    menu_button.setScale(0.4, 0.4);
 
 
 
