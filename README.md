@@ -10,4 +10,4 @@
 - Screenshots
 - Gameplay Videos
 - Support the game
-- and finally, Download **Bob, the man**!
+- And finally, download **Bob, the man**!
