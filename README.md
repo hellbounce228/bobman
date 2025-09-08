@@ -1,8 +1,13 @@
-# Finally, available on itch.io!
+## Finally, available on itch.io!
 
 
-### [Click me!](hellbounce.itch.io/bob-the-man)
+#### [Click me!](hellbounce.itch.io/bob-the-man)
 
-### If you like the game and want me to update it and bring the game somewhere, interact with me on itch.io.
+#### If you like the game and want me to update it and bring the game somewhere, interact with me on itch.io.
 
-### There, you could find the Dev log, Screenshots, Gameplay Videos, and finally, Download the game!
+#### There, you could find:
+- The Dev log
+- Screenshots
+- Gameplay Videos
+- Support the game
+- and finally, Download **Bob, the man**!
