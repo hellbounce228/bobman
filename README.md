@@ -1,3 +1,3 @@
-Now available on itch.io!
+# Finally, available on itch.io!
 
-hellbounce.itch.io/bob-the-man
+# [Click me!](hellbounce.itch.io/bob-the-man)
