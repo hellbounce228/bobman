@@ -10,3 +10,5 @@
 - Gameplay Videos
 - Support the game
 - And finally, download **Bob, the man**!
+
+not sure if I'm going to work on it anymore, probably just gonna stick to UE5 and see what i could do
